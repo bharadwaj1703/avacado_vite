@@ -10,6 +10,7 @@ import {
   LessonSchema,
   ScreenSchema,
   QuestionSchema,
+  RewardsSchema,
   type ContentManifest,
 } from '../types/content'
 
@@ -19,7 +20,7 @@ const RESOLVED_VIRTUAL_MODULE_ID = '\0' + VIRTUAL_MODULE_ID
 interface ContentFile {
   path: string
   content: unknown
-  type: 'curriculum' | 'milestone' | 'level' | 'lesson' | 'screen' | 'question'
+  type: 'curriculum' | 'milestone' | 'level' | 'lesson' | 'screen' | 'question' | 'rewards'
 }
 
 interface ValidationError {
@@ -37,6 +38,7 @@ function detectFileType(filePath: string): ContentFile['type'] | null {
   const filename = parts[parts.length - 1]
 
   if (filename === 'curriculum.yaml') return 'curriculum'
+  if (filename === 'rewards.yaml') return 'rewards'
   if (filename === 'milestone.yaml') return 'milestone'
   if (filename === 'level.yaml') return 'level'
   if (filename === 'lesson.yaml') return 'lesson'
@@ -60,6 +62,8 @@ function getSchemaForType(type: ContentFile['type']): ZodSchema {
       return ScreenSchema
     case 'question':
       return QuestionSchema
+    case 'rewards':
+      return RewardsSchema
     default:
       throw new Error(`Unknown content type: ${type}`)
   }
@@ -72,6 +76,8 @@ function generateKey(filePath: string, content: unknown, type: ContentFile['type
   switch (type) {
     case 'curriculum':
       return 'curriculum'
+    case 'rewards':
+      return 'rewards'
     case 'milestone': {
       const milestoneId = parts.find((p) => p.match(/^\d+-/))?.replace(/\.yaml$/, '')
       return milestoneId || (content as { id: string }).id
@@ -301,6 +307,12 @@ function generateManifest(files: ContentFile[], contentDir: string): ContentMani
     lessons: {},
     screens: {},
     questions: {},
+    rewards: {
+      version: '1.0.0',
+      title: 'Rewards',
+      description: 'Unlock rewards with coins',
+      items: [],
+    },
   }
 
   for (const file of files) {
@@ -372,6 +384,9 @@ function generateManifest(files: ContentFile[], contentDir: string): ContentMani
       }
       case 'question':
         manifest.questions[key] = data as ContentManifest['questions'][string]
+        break
+      case 'rewards':
+        manifest.rewards = data as ContentManifest['rewards']
         break
     }
   }

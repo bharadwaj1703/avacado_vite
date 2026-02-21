@@ -239,6 +239,20 @@ export const CurriculumSchema = z.object({
   milestone_refs: z.array(z.string()),
 })
 
+export const RewardItemSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  thumbnail: z.string(),
+  price_coins: z.number().int().positive(),
+})
+
+export const RewardsSchema = z.object({
+  version: z.string(),
+  title: z.string(),
+  description: z.string().optional(),
+  items: z.array(RewardItemSchema),
+})
+
 // ============================================================================
 // Content Manifest
 // ============================================================================
@@ -252,6 +266,7 @@ export const ContentManifestSchema = z.object({
   lessons: z.record(z.string(), LessonSchema),
   screens: z.record(z.string(), ScreenSchema),
   questions: z.record(z.string(), QuestionSchema),
+  rewards: RewardsSchema,
 })
 
 // ============================================================================
@@ -280,6 +295,8 @@ export type Lesson = z.infer<typeof LessonSchema>
 export type Level = z.infer<typeof LevelSchema>
 export type Milestone = z.infer<typeof MilestoneSchema>
 export type Curriculum = z.infer<typeof CurriculumSchema>
+export type RewardItem = z.infer<typeof RewardItemSchema>
+export type Rewards = z.infer<typeof RewardsSchema>
 
 export type ContentManifest = z.infer<typeof ContentManifestSchema>
 

@@ -69,10 +69,10 @@ export function LessonCard({
   const isInProgress = progress > 0 && !isComplete
 
   return (
-    <div className={`relative ${isCurrent ? 'pt-12 md:pt-14' : ''}`}>
-      {/* Mascot — floats above the card, overlapping thumbnail top */}
+    <div className="relative">
+      {/* Mascot — overlaps the top-right of thumbnail naturally */}
       {isCurrent && (
-        <div className="pointer-events-none absolute -top-2 right-3 z-10 w-24 md:right-4 md:w-28">
+        <div className="pointer-events-none absolute -top-8 right-1 z-10 w-24 md:-top-10 md:right-2 md:w-28">
           <div className="aspect-[500/520]">
             <MascotBlob
               bodyMode="static"

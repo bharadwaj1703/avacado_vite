@@ -16,12 +16,13 @@ export const record = mutation({
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new Error('Not authenticated')
+    // Auth may not be ready on initial client frames; skip quietly.
+    if (!identity) return null
     const user = await ctx.db
       .query('users')
       .withIndex('by_clerk_user_id', (q) => q.eq('clerkUserId', identity.subject))
       .unique()
-    if (!user) throw new Error('User not found')
+    if (!user) return null
     return await ctx.db.insert('userHistory', {
       userId: user._id,
       actionKind: args.actionKind,

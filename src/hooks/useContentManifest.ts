@@ -8,6 +8,7 @@ import type {
   Lesson,
   Screen,
   Question,
+  Rewards,
 } from '@/types/content'
 
 // ============================================================================
@@ -30,6 +31,10 @@ export function useContentManifest(): ContentManifest {
 
 export function useCurriculum(): Curriculum {
   return contentManifest.curriculum
+}
+
+export function useRewards(): Rewards {
+  return contentManifest.rewards
 }
 
 // ============================================================================

@@ -15,6 +15,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppRewardsRouteImport } from './routes/_app/rewards'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppMeRouteImport } from './routes/_app/me'
 import { Route as AppLeaderboardRouteImport } from './routes/_app/leaderboard'
@@ -53,6 +54,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppRewardsRoute = AppRewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppProfileRoute = AppProfileRouteImport.update({
   id: '/profile',
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/leaderboard': typeof AppLeaderboardRoute
   '/me': typeof AppMeRoute
   '/profile': typeof AppProfileRoute
+  '/rewards': typeof AppRewardsRoute
   '/quiz/$quizId': typeof AppQuizQuizIdRoute
   '/learn/': typeof AppLearnIndexRoute
   '/learn/$milestoneId/$levelId': typeof AppLearnMilestoneIdLevelIdRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/leaderboard': typeof AppLeaderboardRoute
   '/me': typeof AppMeRoute
   '/profile': typeof AppProfileRoute
+  '/rewards': typeof AppRewardsRoute
   '/quiz/$quizId': typeof AppQuizQuizIdRoute
   '/learn': typeof AppLearnIndexRoute
   '/learn/$milestoneId/$levelId': typeof AppLearnMilestoneIdLevelIdRoute
@@ -147,6 +155,7 @@ export interface FileRoutesById {
   '/_app/leaderboard': typeof AppLeaderboardRoute
   '/_app/me': typeof AppMeRoute
   '/_app/profile': typeof AppProfileRoute
+  '/_app/rewards': typeof AppRewardsRoute
   '/_app/quiz/$quizId': typeof AppQuizQuizIdRoute
   '/_app/learn/': typeof AppLearnIndexRoute
   '/_app/learn/$milestoneId/$levelId': typeof AppLearnMilestoneIdLevelIdRoute
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/me'
     | '/profile'
+    | '/rewards'
     | '/quiz/$quizId'
     | '/learn/'
     | '/learn/$milestoneId/$levelId'
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/leaderboard'
     | '/me'
     | '/profile'
+    | '/rewards'
     | '/quiz/$quizId'
     | '/learn'
     | '/learn/$milestoneId/$levelId'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/_app/leaderboard'
     | '/_app/me'
     | '/_app/profile'
+    | '/_app/rewards'
     | '/_app/quiz/$quizId'
     | '/_app/learn/'
     | '/_app/learn/$milestoneId/$levelId'
@@ -258,6 +270,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/rewards': {
+      id: '/_app/rewards'
+      path: '/rewards'
+      fullPath: '/rewards'
+      preLoaderRoute: typeof AppRewardsRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/profile': {
       id: '/_app/profile'
@@ -330,6 +349,7 @@ interface AppRouteChildren {
   AppLeaderboardRoute: typeof AppLeaderboardRoute
   AppMeRoute: typeof AppMeRoute
   AppProfileRoute: typeof AppProfileRoute
+  AppRewardsRoute: typeof AppRewardsRoute
   AppQuizQuizIdRoute: typeof AppQuizQuizIdRoute
   AppLearnIndexRoute: typeof AppLearnIndexRoute
   AppLearnMilestoneIdLevelIdRoute: typeof AppLearnMilestoneIdLevelIdRoute
@@ -341,6 +361,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppLeaderboardRoute: AppLeaderboardRoute,
   AppMeRoute: AppMeRoute,
   AppProfileRoute: AppProfileRoute,
+  AppRewardsRoute: AppRewardsRoute,
   AppQuizQuizIdRoute: AppQuizQuizIdRoute,
   AppLearnIndexRoute: AppLearnIndexRoute,
   AppLearnMilestoneIdLevelIdRoute: AppLearnMilestoneIdLevelIdRoute,

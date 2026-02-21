@@ -21,7 +21,8 @@ export const syncFromClerk = mutation({
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
-    if (!identity) throw new Error('Not authenticated')
+    // Auth can be briefly unavailable during client bootstrap; no-op instead of error spam.
+    if (!identity) return null
     const clerkUserId = identity.subject
     const existing = await ctx.db
       .query('users')
@@ -96,6 +97,29 @@ export const updateOnboarding = mutation({
     if (payload.timezone !== undefined) patch.timezone = payload.timezone
     if (completed) patch.onboardingCompletedAt = Date.now()
     await ctx.db.patch(user._id, patch)
+    return user._id
+  },
+})
+
+export const patchProfile = mutation({
+  args: {
+    displayName: v.optional(v.string()),
+    companyWebsite: v.optional(v.string()),
+    jobTitle: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity()
+    if (!identity) throw new Error('Not authenticated')
+    const user = await ctx.db
+      .query('users')
+      .withIndex('by_clerk_user_id', (q) => q.eq('clerkUserId', identity.subject))
+      .unique()
+    if (!user) throw new Error('User not found')
+    const patch: Record<string, unknown> = {}
+    if (args.displayName !== undefined) patch.displayName = args.displayName
+    if (args.companyWebsite !== undefined) patch.companyWebsite = args.companyWebsite
+    if (args.jobTitle !== undefined) patch.jobTitle = args.jobTitle
+    if (Object.keys(patch).length > 0) await ctx.db.patch(user._id, patch)
     return user._id
   },
 })

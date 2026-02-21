@@ -14,6 +14,7 @@ import { MascotBlob } from '@/components/mascot/MascotBlob'
 import { DEFAULT_OUTER_BLOBS } from '@/components/mascot/mascot-blob-config'
 import { animate, createScope } from 'animejs'
 import type { Option } from '@/types/quiz'
+import { useConvexUser } from '@/hooks/useConvexUser'
 import { isConvexSkipped } from '@/lib/convex-skip'
 
 type Profession = 'student' | 'freelancer' | 'founder' | 'business_owner' | 'working_professional' | 'others'
@@ -64,6 +65,8 @@ type OnboardingPhase = 'steps' | 'saving' | 'celebration' | 'exiting'
 function OnboardingPage() {
   const navigate = useNavigate()
   const updateOnboarding = useMutation((api as any).users.updateOnboarding)
+  const { user: convexUser } = useConvexUser()
+  const skip = isConvexSkipped()
 
   const [phase, setPhase] = useState<OnboardingPhase>('steps')
   const [profession, setProfession] = useState<Profession | null>(null)
@@ -116,7 +119,7 @@ function OnboardingPage() {
     setStepIndex(stepIndex + 1)
   }
 
-  const canContinue =
+  const stepComplete =
     currentStepKey === 'profession'
       ? !!profession
       : currentStepKey === 'companyWebsite'
@@ -130,6 +133,9 @@ function OnboardingPage() {
               : currentStepKey === 'preferredTiming'
                 ? !!preferredTiming
                 : false
+  const canContinue =
+    stepComplete &&
+    (isLastStep && !skip && convexUser === null ? false : true)
 
   function handleCtaClick() {
     if (phase !== 'celebration') return
@@ -282,6 +288,9 @@ function OnboardingPage() {
 
       <PageContainer className="max-w-md px-4 pb-8">
         <div className="flex flex-col gap-3">
+          {isLastStep && !skip && convexUser === null && (
+            <p className="text-center text-sm text-muted-foreground">Setting up your account…</p>
+          )}
           {currentStepKey === 'companyWebsite' && (
             <Button variant="outline" size="lg" className="w-full" onClick={handleSkip}>
               Skip

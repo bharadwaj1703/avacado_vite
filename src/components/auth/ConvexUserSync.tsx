@@ -1,17 +1,20 @@
 import { useRef } from 'react'
+import { useConvexAuth } from 'convex/react'
 import { useUser } from '@clerk/clerk-react'
 import { useConvexUser } from '@/hooks/useConvexUser'
 
 /**
- * When signed in, ensures the Convex user exists (sync from Clerk) and optionally
- * updates displayName. Runs once per session when Convex user is missing.
+ * After Convex has authenticated (token sent and validated), sync Clerk user to Convex.
+ * Only runs when useConvexAuth().isAuthenticated is true so the mutation receives the JWT.
+ * See https://docs.convex.dev/auth/clerk and https://docs.convex.dev/auth/debug
  */
 export function ConvexUserSync() {
-  const { isSignedIn, user: clerkUser } = useUser()
-  const { user, isLoading, syncUser } = useConvexUser()
+  const { isAuthenticated } = useConvexAuth()
+  const { user: clerkUser } = useUser()
+  const { syncUser } = useConvexUser()
   const syncedRef = useRef(false)
 
-  if (isSignedIn && !isLoading && user === null && !syncedRef.current) {
+  if (isAuthenticated && !syncedRef.current) {
     syncedRef.current = true
     syncUser({ displayName: clerkUser?.fullName ?? undefined }).catch(() => {
       syncedRef.current = false

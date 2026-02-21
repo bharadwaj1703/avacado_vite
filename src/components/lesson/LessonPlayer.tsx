@@ -4,11 +4,11 @@ import type { Lesson, AssessmentResult, ContentManifest } from '@/types/content'
 import { useScreens, useQuestions, useQuizConfig } from '@/hooks/useContentManifest'
 import { ScreenPlayer } from './ScreenPlayer'
 import { QuizRunner } from './QuizRunner'
+import { LessonComplete } from './LessonComplete'
 import { QuestionRenderer } from './questions/QuestionRenderer'
 import { useProgressStore } from '@/store/progress'
 import { useRecordUserHistory } from '@/hooks/useRecordUserHistory'
-import { X, CheckCircle2, RotateCcw } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { X } from 'lucide-react'
 import { animate } from 'animejs'
 import type { QuestionResult } from '@/types/content'
 
@@ -447,31 +447,30 @@ export function LessonPlayer({
           </div>
         )
 
-      case 'complete':
+      case 'complete': {
+        // Find the next level title for the CTA
+        const currentMilestone = manifest.milestones[milestoneId]
+        let nextLevelTitle: string | undefined
+        if (currentMilestone) {
+          const levelRefs = currentMilestone.level_refs
+          const currentIdx = levelRefs.indexOf(levelId)
+          if (currentIdx >= 0 && currentIdx < levelRefs.length - 1) {
+            const nextLevelRef = levelRefs[currentIdx + 1]
+            nextLevelTitle = manifest.levels[nextLevelRef]?.title
+          }
+        }
+
         return (
-          <div className="flex h-full flex-col items-center justify-center gap-6 py-8">
-            <div className="text-center">
-              <div className="mb-4 flex justify-center">
-                <CheckCircle2 className="size-16 text-green-500" />
-              </div>
-              <h2 className="mb-2 text-2xl font-medium">Lesson Complete!</h2>
-              {state.assessmentResult && (
-                <p className="text-lg text-muted-foreground">
-                  You scored {Math.round(state.assessmentResult.score * 100)}%
-                </p>
-              )}
-            </div>
-
-            {!state.assessmentResult?.passed && lesson.quiz?.allow_retry && (
-              <Button variant="outline" onClick={handleRetryQuiz}>
-                <RotateCcw className="mr-2 size-4" />
-                Retake Quiz
-              </Button>
-            )}
-
-            <Button onClick={handleFinish}>Continue Learning</Button>
-          </div>
+          <LessonComplete
+            assessmentResult={state.assessmentResult}
+            passed={state.assessmentResult?.passed ?? true}
+            allowRetry={!!lesson.quiz?.allow_retry}
+            nextLevelTitle={nextLevelTitle}
+            onRetry={handleRetryQuiz}
+            onFinish={handleFinish}
+          />
         )
+      }
 
       default:
         return null

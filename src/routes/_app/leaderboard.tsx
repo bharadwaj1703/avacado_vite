@@ -1,10 +1,23 @@
+import { useRef } from 'react'
 import type { FunctionReference } from 'convex/server'
 import { useQuery } from 'convex/react'
+import { useUser } from '@clerk/clerk-react'
 import { createFileRoute } from '@tanstack/react-router'
 import { api } from '../../../convex/_generated/api'
 import { RequireOnboardingComplete } from '@/components/auth/AuthGuards'
-import { isConvexSkipped } from '@/lib/convex-skip'
+import { useConvexUser } from '@/hooks/useConvexUser'
+import { clearConvexSkipped, isConvexSkipped } from '@/lib/convex-skip'
+import { RadialIntro } from '@/components/animate-ui/components/community/radial-intro'
 import { Trophy } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+
+const LEADERBOARD_ORBIT_ITEMS = [
+  { id: 1, name: 'Alex', src: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex' },
+  { id: 2, name: 'Sam', src: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sam' },
+  { id: 3, name: 'Jordan', src: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Jordan' },
+  { id: 4, name: 'Casey', src: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Casey' },
+  { id: 5, name: 'Riley', src: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Riley' },
+]
 
 type LeaderboardEntry = { rank: number; userId: string; displayName: string; score: number; isCurrentUser: boolean }
 
@@ -12,6 +25,16 @@ function LeaderboardContent() {
   const list = useQuery(
     (api as { leaderboard: { list: FunctionReference<'query'> } }).leaderboard.list
   ) as LeaderboardEntry[] | undefined
+  const { isSignedIn, user: clerkUser } = useUser()
+  const { syncUser } = useConvexUser()
+  const syncedOnceRef = useRef(false)
+
+  if (list?.length === 0 && isSignedIn && !syncedOnceRef.current) {
+    syncedOnceRef.current = true
+    syncUser({ displayName: clerkUser?.fullName ?? undefined }).catch(() => {
+      syncedOnceRef.current = false
+    })
+  }
 
   return (
     <div className="mx-auto max-w-md px-4 py-6">
@@ -19,10 +42,16 @@ function LeaderboardContent() {
         <Trophy className="size-6 text-primary" />
         <h1 className="text-xl font-semibold">Leaderboard</h1>
       </div>
+      <div className="mb-8 flex justify-center">
+        <RadialIntro orbitItems={LEADERBOARD_ORBIT_ITEMS} stageSize={320} imageSize={56} />
+      </div>
       {list === undefined ? (
         <p className="text-sm text-muted-foreground">Loading...</p>
       ) : list.length === 0 ? (
-        <p className="text-sm text-muted-foreground">No entries yet. Complete lessons to appear here!</p>
+        <p className="space-y-2 text-sm text-muted-foreground">
+          <p>No one on the leaderboard yet.</p>
+          <p>Complete onboarding and a lesson to earn points and appear here. If you just connected the backend, refresh the page.</p>
+        </p>
       ) : (
         <ul className="space-y-2">
           {list.map((entry: LeaderboardEntry) => (
@@ -50,14 +79,31 @@ function LeaderboardContent() {
 
 function LeaderboardUnavailable() {
   return (
-    <div className="mx-auto max-w-md px-4 py-6">
-      <div className="mb-6 flex items-center gap-2">
+    <div className="mx-auto max-w-md space-y-4 px-4 py-6">
+      <div className="flex items-center gap-2">
         <Trophy className="size-6 text-primary" />
         <h1 className="text-xl font-semibold">Leaderboard</h1>
       </div>
-      <p className="text-sm text-muted-foreground">
-        Leaderboard needs the backend. Run <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs">bun convex dev</code> to sync and see rankings.
-      </p>
+      <div className="mb-8 flex justify-center">
+        <RadialIntro orbitItems={LEADERBOARD_ORBIT_ITEMS} stageSize={320} imageSize={56} />
+      </div>
+      <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/40">
+        <p className="text-sm font-medium text-amber-800 dark:text-amber-200">Backend not connected</p>
+        <p className="mt-1 text-sm text-amber-700 dark:text-amber-300">
+          Run <code className="rounded bg-amber-200/60 px-1 font-mono text-xs dark:bg-amber-900/60">bun convex dev</code>, then tap Reconnect to load rankings.
+        </p>
+        <Button
+          className="mt-3 w-full"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            clearConvexSkipped()
+            window.location.reload()
+          }}
+        >
+          Reconnect backend
+        </Button>
+      </div>
     </div>
   )
 }
