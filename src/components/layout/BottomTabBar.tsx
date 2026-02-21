@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Home, BookOpen, User } from 'lucide-react'
+import { Home, BookOpen, Trophy, User } from 'lucide-react'
 
 export function BottomTabBar() {
   return (
@@ -7,7 +7,7 @@ export function BottomTabBar() {
       <div className="mx-auto flex h-16 max-w-md items-center justify-around">
         <Link
           to="/dashboard"
-          className="flex flex-col items-center gap-0.5 px-4 py-2 text-muted-foreground transition-colors [&.active]:text-primary"
+          className="flex flex-col items-center gap-0.5 px-3 py-2 text-muted-foreground transition-colors [&.active]:text-primary"
           activeProps={{ className: 'active text-primary' }}
         >
           <Home className="size-5" />
@@ -16,15 +16,23 @@ export function BottomTabBar() {
         <Link
           to="/quiz/$quizId"
           params={{ quizId: 'basics-1' }}
-          className="flex flex-col items-center gap-0.5 px-4 py-2 text-muted-foreground transition-colors [&.active]:text-primary"
+          className="flex flex-col items-center gap-0.5 px-3 py-2 text-muted-foreground transition-colors [&.active]:text-primary"
           activeProps={{ className: 'active text-primary' }}
         >
           <BookOpen className="size-5" />
           <span className="text-xs font-medium">Learn</span>
         </Link>
         <Link
+          to="/leaderboard"
+          className="flex flex-col items-center gap-0.5 px-3 py-2 text-muted-foreground transition-colors [&.active]:text-primary"
+          activeProps={{ className: 'active text-primary' }}
+        >
+          <Trophy className="size-5" />
+          <span className="text-xs font-medium">Leaderboard</span>
+        </Link>
+        <Link
           to="/profile"
-          className="flex flex-col items-center gap-0.5 px-4 py-2 text-muted-foreground transition-colors [&.active]:text-primary"
+          className="flex flex-col items-center gap-0.5 px-3 py-2 text-muted-foreground transition-colors [&.active]:text-primary"
           activeProps={{ className: 'active text-primary' }}
         >
           <User className="size-5" />

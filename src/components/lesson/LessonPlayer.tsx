@@ -1,0 +1,527 @@
+import { useReducer, useRef, useCallback, useEffect } from 'react'
+import { useNavigate } from '@tanstack/react-router'
+import type { Lesson, AssessmentResult, ContentManifest } from '@/types/content'
+import { useScreens, useQuestions, useQuizConfig } from '@/hooks/useContentManifest'
+import { ScreenPlayer } from './ScreenPlayer'
+import { QuizRunner } from './QuizRunner'
+import { QuestionRenderer } from './questions/QuestionRenderer'
+import { useProgressStore } from '@/store/progress'
+import { useRecordUserHistory } from '@/hooks/useRecordUserHistory'
+import { X, CheckCircle2, RotateCcw } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { animate } from 'animejs'
+import type { QuestionResult } from '@/types/content'
+
+// ============================================================================
+// Types
+// ============================================================================
+
+interface LessonPlayerProps {
+  milestoneId: string
+  levelId: string
+  lesson: Lesson
+  manifest: ContentManifest
+}
+
+type LessonPhase = 'screens' | 'checkpoint' | 'quiz' | 'complete'
+
+interface LessonState {
+  phase: LessonPhase
+  currentScreenIndex: number
+  quizCompleted: boolean
+  assessmentResult: AssessmentResult | null
+}
+
+type LessonAction =
+  | { type: 'NEXT_SCREEN' }
+  | { type: 'PREV_SCREEN' }
+  | { type: 'SHOW_CHECKPOINT' }
+  | { type: 'CHECKPOINT_PASSED' }
+  | { type: 'START_QUIZ' }
+  | { type: 'COMPLETE_QUIZ'; result: AssessmentResult }
+  | { type: 'RESTART_QUIZ' }
+  | { type: 'FINISH_LESSON' }
+  | { type: 'RESET' }
+
+// ============================================================================
+// Reducer
+// ============================================================================
+
+function lessonReducer(state: LessonState, action: LessonAction): LessonState {
+  switch (action.type) {
+    case 'NEXT_SCREEN':
+      return { ...state, phase: 'screens', currentScreenIndex: state.currentScreenIndex + 1 }
+    case 'PREV_SCREEN':
+      return { ...state, phase: 'screens', currentScreenIndex: Math.max(0, state.currentScreenIndex - 1) }
+    case 'SHOW_CHECKPOINT':
+      return { ...state, phase: 'checkpoint' }
+    case 'CHECKPOINT_PASSED':
+      return { ...state, phase: 'screens' }
+    case 'START_QUIZ':
+      return { ...state, phase: 'quiz' }
+    case 'COMPLETE_QUIZ':
+      return {
+        ...state,
+        phase: 'complete',
+        quizCompleted: true,
+        assessmentResult: action.result,
+      }
+    case 'RESTART_QUIZ':
+      return { ...state, phase: 'quiz' }
+    case 'FINISH_LESSON':
+      return state
+    case 'RESET':
+      return {
+        phase: 'screens',
+        currentScreenIndex: 0,
+        quizCompleted: false,
+        assessmentResult: null,
+      }
+    default:
+      return state
+  }
+}
+
+// ============================================================================
+// Scroll/swipe thresholds
+// ============================================================================
+
+const SWIPE_THRESHOLD = 50
+const WHEEL_THRESHOLD = 80
+const WHEEL_COOLDOWN_MS = 600
+
+// ============================================================================
+// Component
+// ============================================================================
+
+export function LessonPlayer({
+  milestoneId,
+  levelId,
+  lesson,
+  manifest,
+}: LessonPlayerProps) {
+  const navigate = useNavigate()
+  const screens = useScreens(milestoneId, levelId, lesson.id)
+  const questions = useQuestions(milestoneId, levelId, lesson.id)
+  const quizConfig = useQuizConfig(milestoneId, levelId, lesson.id)
+
+  const containerRef = useRef<HTMLDivElement>(null)
+  const touchStartRef = useRef<{ y: number; time: number } | null>(null)
+  const progressBarRef = useRef<HTMLDivElement>(null)
+  const wheelCooldownRef = useRef(false)
+  const [state, dispatch] = useReducer(lessonReducer, {
+    phase: 'screens',
+    currentScreenIndex: 0,
+    quizCompleted: false,
+    assessmentResult: null,
+  })
+
+  const recordLessonResult = useProgressStore((s) => s.recordLessonResult)
+  const markScreenComplete = useProgressStore((s) => s.markScreenComplete)
+  const updateLastAccessed = useProgressStore((s) => s.updateLastAccessed)
+  const { recordLessonWatched, recordQuizAnswer } = useRecordUserHistory()
+  const lessonSlug = `${milestoneId}/${levelId}/${lesson.id}`
+
+  // Track lesson access
+  useEffect(() => {
+    updateLastAccessed(milestoneId, levelId, lesson.id)
+  }, [milestoneId, levelId, lesson.id, updateLastAccessed])
+
+  const hasQuiz = questions.length > 0 && quizConfig
+
+  // Animation for screen transitions
+  const animateTransition = useCallback((direction: 'next' | 'prev') => {
+    if (!containerRef.current) return
+
+    const xOffset = direction === 'next' ? -50 : 50
+
+    animate(containerRef.current, {
+      translateX: [xOffset, 0],
+      opacity: [0.5, 1],
+      duration: 300,
+      ease: 'outQuad',
+    })
+  }, [])
+
+  // Animate progress bar
+  const animateProgressBar = useCallback((targetPercent: number) => {
+    if (!progressBarRef.current) return
+
+    animate(progressBarRef.current, {
+      width: `${targetPercent}%`,
+      duration: 300,
+      ease: 'outQuad',
+    })
+  }, [])
+
+  // Advance from current screen (called when transcript finishes)
+  const advanceFromScreen = useCallback(() => {
+    const currentScreen = screens[state.currentScreenIndex]
+    if (currentScreen) {
+      markScreenComplete(milestoneId, levelId, lesson.id, currentScreen.id)
+    }
+
+    // Check if this screen has a checkpoint quiz
+    const checkpointQuestion = currentScreen?.checkpoint_quiz
+      ? manifest.questions[currentScreen.checkpoint_quiz.question_ref]
+      : undefined
+
+    if (checkpointQuestion) {
+      // Show checkpoint as separate step
+      animateTransition('next')
+      dispatch({ type: 'SHOW_CHECKPOINT' })
+      return
+    }
+
+    // No checkpoint — advance to next screen, quiz, or finish
+    if (state.currentScreenIndex < screens.length - 1) {
+      animateTransition('next')
+      dispatch({ type: 'NEXT_SCREEN' })
+      const totalSteps = screens.length + (hasQuiz ? 1 : 0)
+      animateProgressBar(((state.currentScreenIndex + 1) / totalSteps) * 100)
+    } else if (hasQuiz) {
+      dispatch({ type: 'START_QUIZ' })
+      const totalSteps = screens.length + 1
+      animateProgressBar((screens.length / totalSteps) * 100)
+    } else {
+      recordLessonResult(milestoneId, levelId, lesson.id, 1, true)
+      recordLessonWatched(lessonSlug).catch(() => {})
+      dispatch({ type: 'FINISH_LESSON' })
+      navigate({ to: '/dashboard' })
+    }
+  }, [
+    screens,
+    state.currentScreenIndex,
+    hasQuiz,
+    milestoneId,
+    levelId,
+    lesson.id,
+    lessonSlug,
+    manifest.questions,
+    markScreenComplete,
+    animateTransition,
+    animateProgressBar,
+    navigate,
+    recordLessonResult,
+    recordLessonWatched,
+  ])
+
+  // After checkpoint passed — advance to next screen/quiz/finish
+  const advanceFromCheckpoint = useCallback(() => {
+    dispatch({ type: 'CHECKPOINT_PASSED' })
+
+    if (state.currentScreenIndex < screens.length - 1) {
+      animateTransition('next')
+      dispatch({ type: 'NEXT_SCREEN' })
+      const totalSteps = screens.length + (hasQuiz ? 1 : 0)
+      animateProgressBar(((state.currentScreenIndex + 1) / totalSteps) * 100)
+    } else if (hasQuiz) {
+      dispatch({ type: 'START_QUIZ' })
+      const totalSteps = screens.length + 1
+      animateProgressBar((screens.length / totalSteps) * 100)
+    } else {
+      recordLessonResult(milestoneId, levelId, lesson.id, 1, true)
+      recordLessonWatched(lessonSlug).catch(() => {})
+      dispatch({ type: 'FINISH_LESSON' })
+      navigate({ to: '/dashboard' })
+    }
+  }, [
+    state.currentScreenIndex,
+    screens.length,
+    hasQuiz,
+    milestoneId,
+    levelId,
+    lesson.id,
+    lessonSlug,
+    animateTransition,
+    animateProgressBar,
+    navigate,
+    recordLessonResult,
+    recordLessonWatched,
+  ])
+
+  const handleScreenPrev = useCallback(() => {
+    if (state.phase === 'checkpoint') {
+      // Go back from checkpoint to the screen
+      animateTransition('prev')
+      dispatch({ type: 'CHECKPOINT_PASSED' }) // reset to screens phase
+      return
+    }
+    if (state.currentScreenIndex > 0) {
+      animateTransition('prev')
+      dispatch({ type: 'PREV_SCREEN' })
+      const totalSteps = screens.length + (hasQuiz ? 1 : 0)
+      animateProgressBar(((state.currentScreenIndex - 1) / totalSteps) * 100)
+    }
+  }, [state.phase, state.currentScreenIndex, animateTransition, animateProgressBar, screens.length, hasQuiz])
+
+  const handleQuizComplete = useCallback(
+    (result: AssessmentResult) => {
+      recordLessonResult(milestoneId, levelId, lesson.id, result.score, result.passed)
+      recordLessonWatched(lessonSlug).catch(() => {})
+      dispatch({ type: 'COMPLETE_QUIZ', result })
+      animateProgressBar(100)
+    },
+    [milestoneId, levelId, lesson.id, lessonSlug, recordLessonResult, recordLessonWatched, animateProgressBar]
+  )
+
+  const handleRetryQuiz = useCallback(() => {
+    dispatch({ type: 'RESTART_QUIZ' })
+  }, [])
+
+  const handleFinish = useCallback(() => {
+    navigate({ to: '/dashboard' })
+  }, [navigate])
+
+  const handleClose = useCallback(() => {
+    navigate({ to: '/dashboard' })
+  }, [navigate])
+
+  const handleMascotCta = useCallback(() => {
+    advanceFromScreen()
+  }, [advanceFromScreen])
+
+  const handleCheckpointSubmit = useCallback(
+    (result: QuestionResult) => {
+      if (result.correct) {
+        setTimeout(() => {
+          advanceFromCheckpoint()
+        }, 400)
+      }
+    },
+    [advanceFromCheckpoint]
+  )
+
+  // ---- Swipe handling ----
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartRef.current = {
+      y: e.touches[0].clientY,
+      time: Date.now(),
+    }
+  }, [])
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current) return
+
+    const deltaY = touchStartRef.current.y - e.changedTouches[0].clientY
+    touchStartRef.current = null
+
+    if (Math.abs(deltaY) < SWIPE_THRESHOLD) return
+
+    if (deltaY > 0) {
+      // Swipe up → next
+      if (state.phase === 'screens') {
+        advanceFromScreen()
+      }
+    } else {
+      // Swipe down → prev or home
+      if (state.phase === 'screens' || state.phase === 'checkpoint') {
+        if (state.phase === 'screens' && state.currentScreenIndex === 0) {
+          navigate({ to: '/dashboard' })
+        } else {
+          handleScreenPrev()
+        }
+      }
+    }
+  }, [state.phase, state.currentScreenIndex, advanceFromScreen, handleScreenPrev, navigate])
+
+  // ---- Wheel/scroll handling for desktop ----
+  useEffect(() => {
+    const el = containerRef.current?.closest('.lesson-player-root')
+    if (!el) return
+
+    const handleWheel = (e: Event) => {
+      const we = e as WheelEvent
+      if (wheelCooldownRef.current) return
+      if (Math.abs(we.deltaY) < WHEEL_THRESHOLD) return
+
+      wheelCooldownRef.current = true
+      setTimeout(() => {
+        wheelCooldownRef.current = false
+      }, WHEEL_COOLDOWN_MS)
+
+      if (we.deltaY > 0) {
+        // Scroll down → next
+        if (state.phase === 'screens') {
+          advanceFromScreen()
+        }
+      } else {
+        // Scroll up → prev or home
+        if (state.phase === 'screens' || state.phase === 'checkpoint') {
+          if (state.phase === 'screens' && state.currentScreenIndex === 0) {
+            navigate({ to: '/dashboard' })
+          } else {
+            handleScreenPrev()
+          }
+        }
+      }
+    }
+
+    el.addEventListener('wheel', handleWheel, { passive: true })
+    return () => {
+      el.removeEventListener('wheel', handleWheel)
+    }
+  }, [state.phase, state.currentScreenIndex, advanceFromScreen, handleScreenPrev, navigate])
+
+  // Calculate progress
+  const totalSteps = screens.length + (hasQuiz ? 1 : 0)
+  const currentStep = state.phase === 'screens' || state.phase === 'checkpoint'
+    ? state.currentScreenIndex
+    : state.phase === 'quiz'
+      ? screens.length
+      : totalSteps
+  const progressPercent = totalSteps > 0 ? (currentStep / totalSteps) * 100 : 0
+
+  // Completed screens count
+  const completedScreens = state.phase === 'screens' || state.phase === 'checkpoint'
+    ? state.currentScreenIndex
+    : screens.length
+
+  // Render based on phase
+  const renderContent = () => {
+    switch (state.phase) {
+      case 'screens': {
+        const currentScreen = screens[state.currentScreenIndex]
+
+        if (!currentScreen) {
+          return (
+            <div className="flex h-full items-center justify-center text-muted-foreground">
+              No screens available
+            </div>
+          )
+        }
+
+        return (
+          <ScreenPlayer
+            key={currentScreen.id}
+            screen={currentScreen}
+            onComplete={advanceFromScreen}
+            onMascotCta={handleMascotCta}
+          />
+        )
+      }
+
+      case 'checkpoint': {
+        const currentScreen = screens[state.currentScreenIndex]
+        const checkpointQuestion = currentScreen?.checkpoint_quiz
+          ? manifest.questions[currentScreen.checkpoint_quiz.question_ref]
+          : undefined
+
+        if (!checkpointQuestion) return null
+
+        return (
+          <div className="flex h-full flex-col items-center justify-center gap-6 px-4">
+            <div className="w-full max-w-lg">
+              <p className="mb-6 text-lg font-medium text-foreground">
+                Quick check before continuing
+              </p>
+              <QuestionRenderer
+                question={checkpointQuestion}
+                onSubmit={handleCheckpointSubmit}
+              />
+            </div>
+          </div>
+        )
+      }
+
+      case 'quiz':
+        if (!hasQuiz) return null
+
+        return (
+          <div className="flex h-full flex-col">
+            <div className="mb-4">
+              <h2 className="text-xl font-medium">Lesson Quiz</h2>
+              <p className="text-sm text-muted-foreground">
+                Test your knowledge from this lesson
+              </p>
+            </div>
+            <div className="flex-1 overflow-auto">
+              <QuizRunner
+                questions={questions}
+                config={quizConfig}
+                onComplete={handleQuizComplete}
+                onRetry={handleRetryQuiz}
+                onAnswerRecord={(correct) => recordQuizAnswer(lessonSlug, correct)}
+              />
+            </div>
+          </div>
+        )
+
+      case 'complete':
+        return (
+          <div className="flex h-full flex-col items-center justify-center gap-6 py-8">
+            <div className="text-center">
+              <div className="mb-4 flex justify-center">
+                <CheckCircle2 className="size-16 text-green-500" />
+              </div>
+              <h2 className="mb-2 text-2xl font-medium">Lesson Complete!</h2>
+              {state.assessmentResult && (
+                <p className="text-lg text-muted-foreground">
+                  You scored {Math.round(state.assessmentResult.score * 100)}%
+                </p>
+              )}
+            </div>
+
+            {!state.assessmentResult?.passed && lesson.quiz?.allow_retry && (
+              <Button variant="outline" onClick={handleRetryQuiz}>
+                <RotateCcw className="mr-2 size-4" />
+                Retake Quiz
+              </Button>
+            )}
+
+            <Button onClick={handleFinish}>Continue Learning</Button>
+          </div>
+        )
+
+      default:
+        return null
+    }
+  }
+
+  return (
+    <div
+      className="lesson-player-root flex h-dvh flex-col bg-background"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Header */}
+      <header className="mx-auto flex w-full max-w-2xl items-center justify-between px-4 py-3">
+        {/* Left: Close button */}
+        <button
+          onClick={handleClose}
+          className="flex size-10 items-center justify-center rounded-full hover:bg-muted"
+        >
+          <X className="size-5" />
+        </button>
+
+        {/* Center: Lesson title */}
+        <h1 className="max-w-[60%] truncate text-sm font-medium">
+          {lesson.title}
+        </h1>
+
+        {/* Right: Progress circle */}
+        <div className="flex size-10 items-center justify-center rounded-full border-2 border-muted">
+          <span className="text-xs font-medium text-muted-foreground">
+            {completedScreens}/{screens.length}
+          </span>
+        </div>
+      </header>
+
+      {/* Progress Bar */}
+      <div className="mx-auto h-1 w-full max-w-2xl bg-muted">
+        <div
+          ref={progressBarRef}
+          className="h-full bg-primary"
+          style={{ width: `${progressPercent}%` }}
+        />
+      </div>
+
+      {/* Content */}
+      <main className="mx-auto w-full max-w-2xl flex-1 overflow-hidden p-4">
+        <div ref={containerRef} className="h-full">
+          {renderContent()}
+        </div>
+      </main>
+    </div>
+  )
+}

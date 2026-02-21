@@ -1,13 +1,14 @@
 import type { Unit } from '@/types/quiz'
+import type { Lesson } from '@/types/content'
 import { LessonCard } from './LessonCard'
 
 interface UnitSectionProps {
   unit: Unit
+  milestoneId?: string
+  levelId?: string
 }
 
-const offsets: Array<'left' | 'center' | 'right'> = ['center', 'right', 'center', 'left']
-
-export function UnitSection({ unit }: UnitSectionProps) {
+export function UnitSection({ unit, milestoneId = '01-ai-foundations', levelId = '01-intro-to-ai' }: UnitSectionProps) {
   return (
     <div className="space-y-1">
       <div className="rounded-xl bg-secondary px-4 py-3">
@@ -15,9 +16,27 @@ export function UnitSection({ unit }: UnitSectionProps) {
         <p className="text-xs text-muted-foreground">{unit.description}</p>
       </div>
       <div className="flex flex-col items-center py-2">
-        {unit.lessons.map((lesson, i) => (
-          <LessonCard key={lesson.id} lesson={lesson} offset={offsets[i % offsets.length]} />
-        ))}
+        {unit.lessons.map((lesson, i) => {
+          const contentLesson: Lesson = {
+            id: lesson.id,
+            title: lesson.title,
+            description: '',
+            order: i,
+            screen_refs: [],
+          }
+          return (
+            <LessonCard
+              key={lesson.id}
+              milestoneId={milestoneId}
+              levelId={levelId}
+              lesson={contentLesson}
+              isLocked={lesson.status === 'locked'}
+              isCurrent={lesson.status === 'current'}
+              isComplete={lesson.status === 'completed'}
+              progress={lesson.status === 'completed' ? 100 : lesson.status === 'current' ? 50 : 0}
+            />
+          )
+        })}
       </div>
     </div>
   )

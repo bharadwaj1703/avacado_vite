@@ -1,0 +1,10 @@
+id: "01-ai-foundations"
+title: "AI Foundations"
+description: "Build a solid foundation in AI concepts, from basic definitions to understanding how AI systems work."
+order: 1
+level_refs:
+  - levels/01-intro-to-ai/level.yaml
+  - levels/02-ai-for-work/level.yaml
+  - levels/03-neural-networks/level.yaml
+color_theme: "emerald"
+thumbnail: "/content/images/milestone-ai-foundations.svg"

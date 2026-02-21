@@ -1,0 +1,9 @@
+id: "02-how-ai-learns"
+title: "How AI Learns"
+description: "Discover how machines learn from data and improve over time."
+order: 2
+screen_refs: []
+estimated_duration_minutes: 12
+tags:
+  - fundamentals
+  - machine-learning

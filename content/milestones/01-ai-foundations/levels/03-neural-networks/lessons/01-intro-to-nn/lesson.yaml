@@ -1,0 +1,9 @@
+id: "01-intro-to-nn"
+title: "How Neural Networks Work"
+description: "Understanding the building blocks of deep learning."
+order: 1
+screen_refs: []
+estimated_duration_minutes: 18
+tags:
+  - neural-networks
+  - deep-learning

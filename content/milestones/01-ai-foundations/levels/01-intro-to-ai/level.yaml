@@ -1,0 +1,9 @@
+id: "01-intro-to-ai"
+title: "Introduction to AI"
+description: "Learn what AI is, its types, and how it's transforming our world."
+order: 1
+lesson_refs:
+  - lessons/01-what-is-ai/lesson.yaml
+  - lessons/02-how-ai-learns/lesson.yaml
+  - lessons/03-ai-in-daily-life/lesson.yaml
+thumbnail: "/content/images/level-intro-ai.svg"
