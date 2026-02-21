@@ -137,7 +137,7 @@ function SplashPage() {
         <Button
           className="w-full bg-black text-white hover:bg-black/90"
           size="lg"
-          onClick={() => navigate({ to: '/onboarding' })}
+          onClick={() => navigate({ to: '/signup' })}
         >
           Get Started
         </Button>
