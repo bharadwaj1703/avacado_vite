@@ -19,11 +19,7 @@ export default defineConfig({
   },
   server: {
     watch: {
-      // Ignore generated files so Vite doesn't reload when they are regenerated
-      ignored: [
-        '**/routeTree.gen.ts',
-        '**/convex/_generated/**',
-      ],
+      ignored: ['**/routeTree.gen.ts'],
     },
   },
 })

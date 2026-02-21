@@ -7,7 +7,7 @@ An education-focused app for learning AI and tech concepts, built with React, Ty
 ### Requirements
 - **Bun** (runtime and package manager) — [Installation guide](https://bun.sh/docs/installation)
 - **TypeScript** — included as a dev dependency, configured for Bun. See [Bun TypeScript docs](https://bun.sh/docs/typescript)
-- See sample.env - copy it to a file called .env.local and define real parameters or using your deployment dashboard
+- Copy `sample.env` into `.env.local` and set your real values.
 
 ### Install dependencies
 
@@ -38,6 +38,12 @@ bun run lint
 ```bash
 bun run preview
 ```
+
+## Backend/Data
+
+- Local/test writes use `sqlite` (`SQLITE_DB_PATH`)
+- Staging/prod writes use Cloudflare `D1` through HTTP API from Vercel API functions
+- Clerk user creation is tracked by webhook (`POST /api/webhooks/clerk`) with frontend fallback sync (`POST /api/users/sync`)
 
 ## Stack
 

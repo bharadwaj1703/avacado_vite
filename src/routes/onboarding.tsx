@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react'
+import type { MutableRefObject } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useMutation } from 'convex/react'
-import { api } from '../../convex/_generated/api'
+import { useAuth } from '@clerk/clerk-react'
+import { animate, createScope } from 'animejs'
 import { OnboardingRouteGuard } from '@/components/auth/AuthGuards'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,13 +13,15 @@ import { OnboardingErrorBoundary } from '@/components/onboarding/OnboardingError
 import { PageContainer } from '@/components/layout/PageContainer'
 import { MascotBlob } from '@/components/mascot/MascotBlob'
 import { DEFAULT_OUTER_BLOBS } from '@/components/mascot/mascot-blob-config'
-import { animate, createScope } from 'animejs'
+import { apiRequest } from '@/lib/api/client'
+import type { OnboardingInput } from '@/types/api'
 import type { Option } from '@/types/quiz'
-import { useConvexUser } from '@/hooks/useConvexUser'
-import { isConvexSkipped } from '@/lib/convex-skip'
 
 type Profession = 'student' | 'freelancer' | 'founder' | 'business_owner' | 'working_professional' | 'others'
 type StepKey = 'profession' | 'companyWebsite' | 'jobTitle' | 'aiKnowledge' | 'timeCommitment' | 'preferredTiming'
+
+type Frequency = 'daily' | 'weekly' | 'weekend' | 'monthly'
+type Timing = 'morning' | 'lunch' | 'evening' | 'night'
 
 const PROFESSION_OPTIONS: Option[] = [
   { id: 'student', text: 'Student' },
@@ -64,10 +67,7 @@ type OnboardingPhase = 'steps' | 'saving' | 'celebration' | 'exiting'
 
 function OnboardingPage() {
   const navigate = useNavigate()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex api; updateOnboarding mutation ref
-  const updateOnboarding = useMutation((api as any).users.updateOnboarding)
-  const { user: convexUser } = useConvexUser()
-  const skip = isConvexSkipped()
+  const { getToken } = useAuth()
 
   const [phase, setPhase] = useState<OnboardingPhase>('steps')
   const [profession, setProfession] = useState<Profession | null>(null)
@@ -75,8 +75,8 @@ function OnboardingPage() {
   const [jobTitle, setJobTitle] = useState('')
   const [aiKnowledge, setAiKnowledge] = useState<string>('')
   const [timeSpan, setTimeSpan] = useState<5 | 10 | 15 | 20 | 30 | null>(null)
-  const [frequency, setFrequency] = useState<string>('')
-  const [preferredTiming, setPreferredTiming] = useState<string>('')
+  const [frequency, setFrequency] = useState<Frequency | ''>('')
+  const [preferredTiming, setPreferredTiming] = useState<Timing | ''>('')
 
   const steps = buildSteps(profession)
   const [stepIndex, setStepIndex] = useState(0)
@@ -87,32 +87,39 @@ function OnboardingPage() {
   const completionRootRef = useRef<HTMLDivElement>(null)
   const scopeRef = useRef<ReturnType<typeof createScope> | null>(null)
 
+  async function submitOnboarding() {
+    const timezone = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : undefined
+    const payload: OnboardingInput = {
+      profession: profession ?? undefined,
+      companyWebsite: companyWebsite.trim() || undefined,
+      jobTitle: jobTitle.trim() || undefined,
+      selfReportedAiKnowledge: aiKnowledge === '' ? undefined : (Number(aiKnowledge) as 0 | 1 | 2 | 3 | 4),
+      timeCommitmentSpan: timeSpan ?? undefined,
+      timeCommitmentFrequency: frequency || undefined,
+      preferredTiming: preferredTiming || undefined,
+      timezone,
+      completed: true,
+    }
+
+    await apiRequest('/api/users/onboarding', {
+      method: 'POST',
+      tokenProvider: () => getToken(),
+      body: payload,
+    })
+  }
+
   async function handleContinue() {
     if (isLastStep) {
       setPhase('saving')
-      if (isConvexSkipped()) {
-        setPhase('celebration')
-        return
-      }
-      const timezone = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : undefined
       try {
-        await updateOnboarding({
-          profession: profession ?? undefined,
-          companyWebsite: companyWebsite.trim() || undefined,
-          jobTitle: jobTitle.trim() || undefined,
-          selfReportedAiKnowledge: aiKnowledge === '' ? undefined : (Number(aiKnowledge) as 0 | 1 | 2 | 3 | 4),
-          timeCommitmentSpan: timeSpan ?? undefined,
-          timeCommitmentFrequency: frequency || undefined,
-          preferredTiming: preferredTiming || undefined,
-          timezone,
-          completed: true,
-        })
+        await submitOnboarding()
         setPhase('celebration')
       } catch {
         setPhase('steps')
       }
       return
     }
+
     setStepIndex(stepIndex + 1)
   }
 
@@ -134,25 +141,24 @@ function OnboardingPage() {
               : currentStepKey === 'preferredTiming'
                 ? !!preferredTiming
                 : false
-  const canContinue =
-    stepComplete &&
-    (isLastStep && !skip && convexUser === null ? false : true)
 
   function handleCtaClick() {
     if (phase !== 'celebration') return
     setPhase('exiting')
-    const root = completionRootRef.current
-    if (!root) {
+
+    if (!completionRootRef.current) {
       navigate({ to: '/dashboard' })
       return
     }
+
     const scope = scopeRef.current
     if (scope?.methods?.exit) {
       scope.methods.exit()
       window.setTimeout(() => navigate({ to: '/dashboard' }), 450)
-    } else {
-      navigate({ to: '/dashboard' })
+      return
     }
+
+    navigate({ to: '/dashboard' })
   }
 
   if (phase === 'saving') {
@@ -167,9 +173,10 @@ function OnboardingPage() {
   if (phase === 'celebration' || phase === 'exiting') {
     return (
       <OnboardingCompleteScreen
-        rootRef={completionRootRef}
         scopeRef={scopeRef}
-        phase={phase}
+        onRootElement={(el) => {
+          completionRootRef.current = el
+        }}
         onCtaClick={handleCtaClick}
       />
     )
@@ -202,102 +209,87 @@ function OnboardingPage() {
       <div className="flex flex-1 flex-col justify-center px-4 pt-[140px] pb-6">
         <PageContainer className="max-w-md space-y-6">
           {currentStepKey === 'profession' && (
-            <>
-              <RadioQuestion
-                prompt=""
-                options={PROFESSION_OPTIONS}
-                selected={profession ? [profession] : []}
-                onSelect={(id) => setProfession(id as Profession)}
-              />
-            </>
+            <RadioQuestion
+              prompt=""
+              options={PROFESSION_OPTIONS}
+              selected={profession ? [profession] : []}
+              onSelect={(id) => setProfession(id as Profession)}
+            />
           )}
 
           {currentStepKey === 'companyWebsite' && (
-            <>
-              <Input
-                placeholder="https://..."
-                value={companyWebsite}
-                onChange={(e) => setCompanyWebsite(e.target.value)}
-                className="mt-2"
-              />
-            </>
+            <Input
+              placeholder="https://..."
+              value={companyWebsite}
+              onChange={(e) => setCompanyWebsite(e.target.value)}
+              className="mt-2"
+            />
           )}
 
           {currentStepKey === 'jobTitle' && (
-            <>
-              <Input
-                placeholder="e.g. Product Manager"
-                value={jobTitle}
-                onChange={(e) => setJobTitle(e.target.value)}
-                className="mt-2"
-              />
-            </>
+            <Input
+              placeholder="e.g. Product Manager"
+              value={jobTitle}
+              onChange={(e) => setJobTitle(e.target.value)}
+              className="mt-2"
+            />
           )}
 
           {currentStepKey === 'aiKnowledge' && (
-            <>
-              <RadioQuestion
-                prompt=""
-                options={AI_KNOWLEDGE_OPTIONS}
-                selected={aiKnowledge ? [aiKnowledge] : []}
-                onSelect={setAiKnowledge}
-              />
-            </>
+            <RadioQuestion
+              prompt=""
+              options={AI_KNOWLEDGE_OPTIONS}
+              selected={aiKnowledge ? [aiKnowledge] : []}
+              onSelect={setAiKnowledge}
+            />
           )}
 
           {currentStepKey === 'timeCommitment' && (
-            <>
-              <div className="space-y-4">
-                <div className="flex flex-wrap gap-2">
-                  {TIME_SPAN_OPTIONS.map((m) => (
-                    <Button
-                      key={m}
-                      type="button"
-                      variant={timeSpan === m ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setTimeSpan(m)}
-                    >
-                      {m} mins
-                    </Button>
-                  ))}
-                </div>
-                <div>
-                  <p className="mb-2 text-sm font-medium text-muted-foreground">How often?</p>
-                  <RadioQuestion
-                    prompt=""
-                    options={FREQUENCY_OPTIONS}
-                    selected={frequency ? [frequency] : []}
-                    onSelect={setFrequency}
-                  />
-                </div>
+            <div className="space-y-4">
+              <div className="flex flex-wrap gap-2">
+                {TIME_SPAN_OPTIONS.map((m) => (
+                  <Button
+                    key={m}
+                    type="button"
+                    variant={timeSpan === m ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setTimeSpan(m)}
+                  >
+                    {m} mins
+                  </Button>
+                ))}
               </div>
-            </>
+              <div>
+                <p className="mb-2 text-sm font-medium text-muted-foreground">How often?</p>
+                <RadioQuestion
+                  prompt=""
+                  options={FREQUENCY_OPTIONS}
+                  selected={frequency ? [frequency] : []}
+                  onSelect={(value) => setFrequency(value as Frequency)}
+                />
+              </div>
+            </div>
           )}
 
           {currentStepKey === 'preferredTiming' && (
-            <>
-              <RadioQuestion
-                prompt=""
-                options={TIMING_OPTIONS}
-                selected={preferredTiming ? [preferredTiming] : []}
-                onSelect={setPreferredTiming}
-              />
-            </>
+            <RadioQuestion
+              prompt=""
+              options={TIMING_OPTIONS}
+              selected={preferredTiming ? [preferredTiming] : []}
+              onSelect={(value) => setPreferredTiming(value as Timing)}
+            />
           )}
         </PageContainer>
       </div>
 
       <PageContainer className="max-w-md px-4 pb-8">
         <div className="flex flex-col gap-3">
-          {isLastStep && !skip && convexUser === null && (
-            <p className="text-center text-sm text-muted-foreground">Setting up your account…</p>
-          )}
           {currentStepKey === 'companyWebsite' && (
             <Button variant="outline" size="lg" className="w-full" onClick={handleSkip}>
               Skip
             </Button>
           )}
-          <Button onClick={handleContinue} disabled={!canContinue} size="lg" className="w-full">
+          <Button onClick={handleContinue} disabled={!stepComplete} size="lg" className="w-full">
             {isLastStep ? "Let's go!" : 'Continue'}
           </Button>
         </div>
@@ -307,19 +299,18 @@ function OnboardingPage() {
 }
 
 function OnboardingCompleteScreen({
-  rootRef,
   scopeRef,
+  onRootElement,
   onCtaClick,
 }: {
-  rootRef: React.RefObject<HTMLDivElement | null>
-  scopeRef: React.MutableRefObject<ReturnType<typeof createScope> | null>
-  phase: OnboardingPhase
+  scopeRef: MutableRefObject<ReturnType<typeof createScope> | null>
+  onRootElement: (el: HTMLDivElement | null) => void
   onCtaClick: () => void
 }) {
   const mountedRef = useRef(false)
+
   const setRef = (el: HTMLDivElement | null) => {
-    // eslint-disable-next-line react-hooks/immutability -- callback ref: assign to parent's ref
-    ;(rootRef as React.MutableRefObject<HTMLDivElement | null>).current = el
+    onRootElement(el)
     if (el && !mountedRef.current) {
       mountedRef.current = true
       scopeRef.current = createScope({ root: el }).add((self) => {
@@ -335,10 +326,7 @@ function OnboardingCompleteScreen({
 
   return (
     <div ref={setRef} className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden px-4">
-      <div
-        className="ob-shine absolute -z-10 h-[300px] w-[300px] rounded-full bg-(--onboarding-fill) opacity-0 blur-3xl"
-        style={{ transform: 'scale(0.8)' }}
-      />
+      <div className="ob-shine absolute -z-10 h-[300px] w-[300px] scale-[0.8] rounded-full bg-(--onboarding-fill) opacity-0 blur-3xl" />
       <div className="ob-mascot flex justify-center">
         <CompletionMascot />
       </div>
@@ -385,7 +373,6 @@ function CompletionMascot() {
   )
 }
 
-/** Fallback when Convex hooks throw (e.g. backend not deployed): show message and let user continue */
 function OnboardingFallback() {
   const navigate = useNavigate()
   return (

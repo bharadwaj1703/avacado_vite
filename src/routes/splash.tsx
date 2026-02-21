@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { MascotBlob, DEFAULT_OUTER_BLOBS, type SubBlobConfig, type BodyMode } from '@/components/mascot/MascotBlob'
 import { MascotSettings } from '@/components/mascot/MascotSettings'
 import { PageContainer } from '@/components/layout/PageContainer'
+import { RedirectSignedInFromSplash } from '@/components/auth/AuthGuards'
 import type { EyeVariant } from '@/components/mascot/MascotEyes'
 import type { MouthVariant } from '@/components/mascot/MascotMouth'
 
@@ -46,6 +47,7 @@ function SplashPage() {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (
+    <RedirectSignedInFromSplash>
     <div className="relative h-dvh flex flex-col">
       <MascotSettings
         bodyMode={bodyMode}
@@ -143,6 +145,7 @@ function SplashPage() {
         </Button>
       </PageContainer>
     </div>
+    </RedirectSignedInFromSplash>
   )
 }
 

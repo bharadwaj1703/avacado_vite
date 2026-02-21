@@ -11,8 +11,7 @@ interface State {
 }
 
 /**
- * Catches errors (e.g. Convex hook throwing when backend not deployed) and shows fallback
- * so the onboarding form is never blank.
+ * Catches onboarding runtime errors and shows fallback so the form is never blank.
  */
 export class OnboardingErrorBoundary extends Component<Props, State> {
   state: State = { hasError: false }
