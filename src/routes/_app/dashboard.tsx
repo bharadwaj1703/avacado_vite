@@ -120,7 +120,7 @@ function DashboardPage() {
   const manifest = useContentManifest()
   const milestones = useMilestones()
   const { isMilestoneUnlocked, isLevelUnlocked } = useGating(manifest)
-  const isLessonComplete = useProgressStore((s) => s.isLessonComplete)
+  const isLessonComplete = useProgressStore((s: ProgressStore) => s.isLessonComplete)
 
   const activeMilestone = milestones.find((m) => {
     if (!isMilestoneUnlocked(m.id)) return false

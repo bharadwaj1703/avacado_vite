@@ -149,7 +149,7 @@ export const useProgressStore = create<ProgressState & ProgressActions>()(
       // Lesson Actions
       // ----------------------------------------------------------------------
       
-      recordLessonResult: (milestoneId, levelId, lessonId, score, passed) => {
+      recordLessonResult: (milestoneId: string, levelId: string, lessonId: string, score: number, passed: boolean) => {
         const key = makeLessonKey(milestoneId, levelId, lessonId)
         const existing = get().lessonResults[key]
         
