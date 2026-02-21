@@ -62,16 +62,10 @@ function ProfilePage() {
     isLoading: boolean
   }
   const skipConvex = isConvexSkipped()
-  const streak = useQuery(
-    (api as { userMetrics: { streak: () => number } }).userMetrics.streak,
-    skipConvex || !isSignedIn ? 'skip' : {}
-  ) as number | undefined
-
-  const patchProfile = useMutation((api as { users: { patchProfile: (args: {
-    displayName?: string
-    companyWebsite?: string
-    jobTitle?: string
-  }) => Promise<unknown> } }).users.patchProfile)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex api types; useQuery/useMutation need function refs
+  const streak = useQuery((api as any).userMetrics.streak, skipConvex || !isSignedIn ? 'skip' : {}) as number | undefined
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex api; patchProfile mutation ref
+  const patchProfile = useMutation((api as any).users.patchProfile)
 
   const [editingWebsite, setEditingWebsite] = useState(false)
   const [editingJobTitle, setEditingJobTitle] = useState(false)

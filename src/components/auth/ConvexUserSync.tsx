@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useConvexAuth } from 'convex/react'
 import { useUser } from '@clerk/clerk-react'
 import { useConvexUser } from '@/hooks/useConvexUser'
@@ -14,12 +14,13 @@ export function ConvexUserSync() {
   const { syncUser } = useConvexUser()
   const syncedRef = useRef(false)
 
-  if (isAuthenticated && !syncedRef.current) {
+  useEffect(() => {
+    if (!isAuthenticated || syncedRef.current) return
     syncedRef.current = true
     syncUser({ displayName: clerkUser?.fullName ?? undefined }).catch(() => {
       syncedRef.current = false
     })
-  }
+  }, [isAuthenticated, clerkUser?.fullName, syncUser])
 
   return null
 }

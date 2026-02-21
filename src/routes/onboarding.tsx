@@ -64,6 +64,7 @@ type OnboardingPhase = 'steps' | 'saving' | 'celebration' | 'exiting'
 
 function OnboardingPage() {
   const navigate = useNavigate()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex api; updateOnboarding mutation ref
   const updateOnboarding = useMutation((api as any).users.updateOnboarding)
   const { user: convexUser } = useConvexUser()
   const skip = isConvexSkipped()
@@ -317,6 +318,7 @@ function OnboardingCompleteScreen({
 }) {
   const mountedRef = useRef(false)
   const setRef = (el: HTMLDivElement | null) => {
+    // eslint-disable-next-line react-hooks/immutability -- callback ref: assign to parent's ref
     ;(rootRef as React.MutableRefObject<HTMLDivElement | null>).current = el
     if (el && !mountedRef.current) {
       mountedRef.current = true

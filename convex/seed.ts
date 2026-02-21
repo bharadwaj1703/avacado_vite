@@ -2,6 +2,7 @@
  * Seed script: run from Convex Dashboard or CLI to add simulated leaderboard users.
  * Run: npx convex run seed:run (or from Dashboard → Functions → seed → run)
  */
+import type { Id } from './_generated/dataModel'
 import { internalMutation } from './_generated/server'
 
 const SEED_USERS = [
@@ -20,7 +21,7 @@ export const run = internalMutation({
       return { message: 'Seed already applied (users exist)', skipped: true }
     }
 
-    const userIds: string[] = []
+    const userIds: Id<'users'>[] = []
     for (const u of SEED_USERS) {
       const id = await ctx.db.insert('users', {
         clerkUserId: u.clerkUserId,
@@ -30,8 +31,6 @@ export const run = internalMutation({
     }
 
     const lessonSlugs = ['01-ai-foundations/01-intro-to-ai/01-what-is-ai', '01-ai-foundations/01-intro-to-ai/02-basics']
-    const now = Date.now()
-    const dayMs = 24 * 60 * 60 * 1000
 
     for (let i = 0; i < userIds.length; i++) {
       const userId = userIds[i]

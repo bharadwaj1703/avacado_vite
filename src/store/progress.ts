@@ -59,6 +59,8 @@ interface ProgressActions {
   resetLesson: (milestoneId: string, levelId: string, lessonId: string) => void
 }
 
+export type ProgressStore = ProgressState & ProgressActions
+
 // ============================================================================
 // Helper Functions
 // ============================================================================
@@ -276,7 +278,7 @@ export const useProgressStore = create<ProgressState & ProgressActions>()(
       // Progress Tracking
       // ----------------------------------------------------------------------
       
-      updateLastAccessed: (milestoneId, levelId, lessonId) => {
+      updateLastAccessed: (milestoneId: string, levelId: string, lessonId: string) => {
         set({
           lastAccessedLesson: makeLessonKey(milestoneId, levelId, lessonId),
           lastAccessedAt: new Date().toISOString(),
@@ -291,11 +293,11 @@ export const useProgressStore = create<ProgressState & ProgressActions>()(
         set(initialState)
       },
 
-      resetLesson: (milestoneId, levelId, lessonId) => {
+      resetLesson: (milestoneId: string, levelId: string, lessonId: string) => {
         const key = makeLessonKey(milestoneId, levelId, lessonId)
         const screenPrefix = `${key}/`
 
-        set((state) => {
+        set((state: ProgressStore) => {
           // Remove lesson result
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { [key]: _removed, ...remainingResults } = state.lessonResults
@@ -317,14 +319,14 @@ export const useProgressStore = create<ProgressState & ProgressActions>()(
     {
       name: 'avacado-progress',
       storage: {
-        getItem: (name) => {
+        getItem: (name: string) => {
           const value = localStorageAdapter.getItem(name)
           return value ? JSON.parse(value) : null
         },
-        setItem: (name, value) => {
+        setItem: (name: string, value: unknown) => {
           localStorageAdapter.setItem(name, JSON.stringify(value))
         },
-        removeItem: (name) => {
+        removeItem: (name: string) => {
           localStorageAdapter.removeItem(name)
         },
       },
@@ -337,10 +339,10 @@ export const useProgressStore = create<ProgressState & ProgressActions>()(
 // ============================================================================
 
 export function useLessonProgress(milestoneId: string, levelId: string, lessonId: string) {
-  const result = useProgressStore((state) => state.getLessonResult(milestoneId, levelId, lessonId))
-  const isComplete = useProgressStore((state) => state.isLessonComplete(milestoneId, levelId, lessonId))
-  const recordResult = useProgressStore((state) => state.recordLessonResult)
-  const reset = useProgressStore((state) => state.resetLesson)
+  const result = useProgressStore((state: ProgressStore) => state.getLessonResult(milestoneId, levelId, lessonId))
+  const isComplete = useProgressStore((state: ProgressStore) => state.isLessonComplete(milestoneId, levelId, lessonId))
+  const recordResult = useProgressStore((state: ProgressStore) => state.recordLessonResult)
+  const reset = useProgressStore((state: ProgressStore) => state.resetLesson)
 
   return {
     result,
@@ -352,8 +354,8 @@ export function useLessonProgress(milestoneId: string, levelId: string, lessonId
 }
 
 export function useScreenProgress(milestoneId: string, levelId: string, lessonId: string) {
-  const markComplete = useProgressStore((state) => state.markScreenComplete)
-  const isComplete = useProgressStore((state) => state.isScreenComplete)
+  const markComplete = useProgressStore((state: ProgressStore) => state.markScreenComplete)
+  const isComplete = useProgressStore((state: ProgressStore) => state.isScreenComplete)
 
   return {
     markScreenComplete: (screenId: string) =>
@@ -364,9 +366,9 @@ export function useScreenProgress(milestoneId: string, levelId: string, lessonId
 }
 
 export function useGating(manifest: ContentManifest) {
-  const isLessonUnlockedFn = useProgressStore((state) => state.isLessonUnlocked)
-  const isLevelUnlockedFn = useProgressStore((state) => state.isLevelUnlocked)
-  const isMilestoneUnlockedFn = useProgressStore((state) => state.isMilestoneUnlocked)
+  const isLessonUnlockedFn = useProgressStore((state: ProgressStore) => state.isLessonUnlocked)
+  const isLevelUnlockedFn = useProgressStore((state: ProgressStore) => state.isLevelUnlocked)
+  const isMilestoneUnlockedFn = useProgressStore((state: ProgressStore) => state.isMilestoneUnlocked)
 
   return {
     isLessonUnlocked: (milestoneId: string, levelId: string, lessonId: string) =>

@@ -1,11 +1,7 @@
-import { useRef } from 'react'
-import type { FunctionReference } from 'convex/server'
 import { useQuery } from 'convex/react'
-import { useUser } from '@clerk/clerk-react'
 import { createFileRoute } from '@tanstack/react-router'
 import { api } from '../../../convex/_generated/api'
 import { RequireOnboardingComplete } from '@/components/auth/AuthGuards'
-import { useConvexUser } from '@/hooks/useConvexUser'
 import { clearConvexSkipped, isConvexSkipped } from '@/lib/convex-skip'
 import { RadialIntro } from '@/components/animate-ui/components/community/radial-intro'
 import { Trophy } from 'lucide-react'
@@ -22,19 +18,8 @@ const LEADERBOARD_ORBIT_ITEMS = [
 type LeaderboardEntry = { rank: number; userId: string; displayName: string; score: number; isCurrentUser: boolean }
 
 function LeaderboardContent() {
-  const list = useQuery(
-    (api as { leaderboard: { list: FunctionReference<'query'> } }).leaderboard.list
-  ) as LeaderboardEntry[] | undefined
-  const { isSignedIn, user: clerkUser } = useUser()
-  const { syncUser } = useConvexUser()
-  const syncedOnceRef = useRef(false)
-
-  if (list?.length === 0 && isSignedIn && !syncedOnceRef.current) {
-    syncedOnceRef.current = true
-    syncUser({ displayName: clerkUser?.fullName ?? undefined }).catch(() => {
-      syncedOnceRef.current = false
-    })
-  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Convex api; leaderboard.list query ref
+  const list = useQuery((api as any).leaderboard.list) as LeaderboardEntry[] | undefined
 
   return (
     <div className="mx-auto max-w-md px-4 py-6">
