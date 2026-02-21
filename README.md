@@ -5,9 +5,9 @@ An education-focused app for learning AI and tech concepts, built with React, Ty
 ## Setup
 
 ### Requirements
-
 - **Bun** (runtime and package manager) — [Installation guide](https://bun.sh/docs/installation)
 - **TypeScript** — included as a dev dependency, configured for Bun. See [Bun TypeScript docs](https://bun.sh/docs/typescript)
+- See sample.env - copy it to a file called .env.local and define real parameters or using your deployment dashboard
 
 ### Install dependencies
 

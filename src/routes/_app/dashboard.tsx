@@ -4,7 +4,7 @@ import {
   useMilestones,
   useLessons,
 } from '@/hooks/useContentManifest'
-import { useGating, useProgressStore } from '@/store/progress'
+import { useGating, useProgressStore, type ProgressStore } from '@/store/progress'
 import { LessonCard } from '@/components/dashboard/LessonCard'
 import { Lock } from 'lucide-react'
 
@@ -24,8 +24,8 @@ function LevelLessons({
   const manifest = useContentManifest()
   const lessons = useLessons(milestoneId, levelId)
   const { isLessonUnlocked } = useGating(manifest)
-  const isLessonComplete = useProgressStore((s) => s.isLessonComplete)
-  const isScreenComplete = useProgressStore((s) => s.isScreenComplete)
+  const isLessonComplete = useProgressStore((s: ProgressStore) => s.isLessonComplete)
+  const isScreenComplete = useProgressStore((s: ProgressStore) => s.isScreenComplete)
 
   const currentLessonId = isActiveLevel
     ? lessons.find((l) => !isLessonComplete(milestoneId, levelId, l.id))?.id

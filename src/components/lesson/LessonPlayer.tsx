@@ -6,7 +6,7 @@ import { ScreenPlayer } from './ScreenPlayer'
 import { QuizRunner } from './QuizRunner'
 import { LessonComplete } from './LessonComplete'
 import { QuestionRenderer } from './questions/QuestionRenderer'
-import { useProgressStore } from '@/store/progress'
+import { useProgressStore, type ProgressStore } from '@/store/progress'
 import { useRecordUserHistory } from '@/hooks/useRecordUserHistory'
 import { X } from 'lucide-react'
 import { animate } from 'animejs'
@@ -116,9 +116,9 @@ export function LessonPlayer({
     assessmentResult: null,
   })
 
-  const recordLessonResult = useProgressStore((s) => s.recordLessonResult)
-  const markScreenComplete = useProgressStore((s) => s.markScreenComplete)
-  const updateLastAccessed = useProgressStore((s) => s.updateLastAccessed)
+  const recordLessonResult = useProgressStore((s: ProgressStore) => s.recordLessonResult)
+  const markScreenComplete = useProgressStore((s: ProgressStore) => s.markScreenComplete)
+  const updateLastAccessed = useProgressStore((s: ProgressStore) => s.updateLastAccessed)
   const { recordLessonWatched, recordQuizAnswer } = useRecordUserHistory()
   const lessonSlug = `${milestoneId}/${levelId}/${lesson.id}`
 
