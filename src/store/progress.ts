@@ -130,9 +130,9 @@ export const useProgressStore = create<ProgressState & ProgressActions>()(
       // Screen Actions
       // ----------------------------------------------------------------------
       
-      markScreenComplete: (milestoneId, levelId, lessonId, screenId) => {
+      markScreenComplete: (milestoneId: string, levelId: string, lessonId: string, screenId: string) => {
         const key = makeScreenKey(milestoneId, levelId, lessonId, screenId)
-        set((state) => ({
+        set((state: ProgressStore) => ({
           completedScreens: {
             ...state.completedScreens,
             [key]: true,
@@ -140,7 +140,7 @@ export const useProgressStore = create<ProgressState & ProgressActions>()(
         }))
       },
 
-      isScreenComplete: (milestoneId, levelId, lessonId, screenId) => {
+      isScreenComplete: (milestoneId: string, levelId: string, lessonId: string, screenId: string) => {
         const key = makeScreenKey(milestoneId, levelId, lessonId, screenId)
         return !!get().completedScreens[key]
       },
@@ -162,7 +162,7 @@ export const useProgressStore = create<ProgressState & ProgressActions>()(
           completedAt: new Date().toISOString(),
         }
 
-        set((state) => ({
+        set((state: ProgressStore) => ({
           lessonResults: {
             ...state.lessonResults,
             [key]: result,
@@ -170,12 +170,12 @@ export const useProgressStore = create<ProgressState & ProgressActions>()(
         }))
       },
 
-      getLessonResult: (milestoneId, levelId, lessonId) => {
+      getLessonResult: (milestoneId: string, levelId: string, lessonId: string) => {
         const key = makeLessonKey(milestoneId, levelId, lessonId)
         return get().lessonResults[key]
       },
 
-      isLessonComplete: (milestoneId, levelId, lessonId) => {
+      isLessonComplete: (milestoneId: string, levelId: string, lessonId: string) => {
         const result = get().getLessonResult(milestoneId, levelId, lessonId)
         return result?.passed ?? false
       },
@@ -184,13 +184,13 @@ export const useProgressStore = create<ProgressState & ProgressActions>()(
       // Gating Functions
       // ----------------------------------------------------------------------
       
-      isLessonUnlocked: (milestoneId, levelId, lessonId, manifest) => {
+      isLessonUnlocked: (milestoneId: string, levelId: string, lessonId: string, manifest: ContentManifest) => {
         // First lesson in a level is always unlocked
         const level = manifest.levels[`${milestoneId}/${levelId}`]
         if (!level) return false
 
         const lessonIds = level.lesson_refs
-          .map((ref) => {
+          .map((ref: string) => {
             const lesson = manifest.lessons[ref]
             return lesson?.id
           })
@@ -211,12 +211,12 @@ export const useProgressStore = create<ProgressState & ProgressActions>()(
         return prevResult?.passed ?? false
       },
 
-      isLevelUnlocked: (milestoneId, levelId, manifest) => {
+      isLevelUnlocked: (milestoneId: string, levelId: string, manifest: ContentManifest) => {
         const milestone = manifest.milestones[milestoneId]
         if (!milestone) return false
 
         const levelIds = milestone.level_refs
-          .map((ref) => {
+          .map((ref: string) => {
             const level = manifest.levels[ref]
             return level?.id
           })
@@ -233,7 +233,7 @@ export const useProgressStore = create<ProgressState & ProgressActions>()(
         const prevLevel = manifest.levels[`${milestoneId}/${prevLevelId}`]
         if (!prevLevel) return false
 
-        return prevLevel.lesson_refs.every((lessonRef) => {
+        return prevLevel.lesson_refs.every((lessonRef: string) => {
           const lesson = manifest.lessons[lessonRef]
           if (!lesson) return false
           const key = makeLessonKey(milestoneId, prevLevelId, lesson.id)
@@ -241,9 +241,9 @@ export const useProgressStore = create<ProgressState & ProgressActions>()(
         })
       },
 
-      isMilestoneUnlocked: (milestoneId, manifest) => {
+      isMilestoneUnlocked: (milestoneId: string, manifest: ContentManifest) => {
         const milestoneIds = manifest.curriculum.milestone_refs
-          .map((ref) => {
+          .map((ref: string) => {
             const milestone = manifest.milestones[ref]
             return milestone?.id
           })
@@ -260,11 +260,11 @@ export const useProgressStore = create<ProgressState & ProgressActions>()(
         const prevMilestone = manifest.milestones[prevMilestoneId]
         if (!prevMilestone) return false
 
-        return prevMilestone.level_refs.every((levelRef) => {
+        return prevMilestone.level_refs.every((levelRef: string) => {
           const level = manifest.levels[levelRef]
           if (!level) return false
           const [, levelId] = parseRef(levelRef, 2)
-          return level.lesson_refs.every((lessonRef) => {
+          return level.lesson_refs.every((lessonRef: string) => {
             const lesson = manifest.lessons[lessonRef]
             if (!lesson) return false
             const [, , lessonId] = parseRef(lessonRef, 3)

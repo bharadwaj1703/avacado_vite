@@ -1,5 +1,6 @@
-import { useQuery, useMutation } from 'convex/react'
-import { useAuth } from '@clerk/clerk-react'
+import { useRef } from 'react'
+import { useConvexAuth, useQuery, useMutation } from 'convex/react'
+import { useAuth, useUser } from '@clerk/clerk-react'
 import { api } from '../../convex/_generated/api'
 import { isConvexSkipped } from '@/lib/convex-skip'
 
@@ -41,5 +42,29 @@ export function useConvexUser(): {
     isLoading,
     isOnboardingComplete,
     syncUser,
+  }
+}
+
+/**
+ * Call once from app root. When Convex has authenticated, syncs Clerk user to Convex (single fire).
+ * No useEffect: sync is triggered from hook body when isAuthenticated; ref guards one-shot.
+ */
+export function useSyncUserOnAuth(): void {
+  const { isAuthenticated } = useConvexAuth()
+  const { user: clerkUser } = useUser()
+  const { syncUser } = useConvexUser()
+  const syncedRef = useRef(false)
+
+  if (isConvexSkipped()) return
+
+  if (isAuthenticated) {
+    /* eslint-disable react-hooks/refs -- one-shot sync from hook (no useEffect); ref guards re-entry, catch resets for retry */
+    if (!syncedRef.current) {
+      syncedRef.current = true
+      syncUser({ displayName: clerkUser?.fullName ?? undefined }).catch(() => {
+        syncedRef.current = false
+      })
+    }
+    /* eslint-enable react-hooks/refs */
   }
 }
