@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { getDb } from './_lib/db/adapter'
-import { methodNotAllowed, readBodyJson, sendJson } from './_lib/http'
-import { requireClerkUserId } from './_lib/auth'
+import { getDb } from './_lib/db/adapter.js'
+import { methodNotAllowed, readBodyJson, sendJson } from './_lib/http.js'
+import { requireClerkUserId } from './_lib/auth.js'
 import type { RecordActivityInput } from './_lib/types'
 
 const VALID_ACTIONS = new Set([

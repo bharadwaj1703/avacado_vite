@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { getDb } from '../_lib/db/adapter'
-import { methodNotAllowed, sendJson } from '../_lib/http'
-import { verifyClerkWebhook } from '../_lib/auth'
+import { getDb } from '../_lib/db/adapter.js'
+import { methodNotAllowed, sendJson } from '../_lib/http.js'
+import { verifyClerkWebhook } from '../_lib/auth.js'
 
 type ClerkWebhookEvent = {
   type: string

@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { getDb } from '../_lib/db/adapter'
-import { methodNotAllowed, sendJson } from '../_lib/http'
-import { requireClerkUserId } from '../_lib/auth'
+import { getDb } from '../_lib/db/adapter.js'
+import { methodNotAllowed, sendJson } from '../_lib/http.js'
+import { requireClerkUserId } from '../_lib/auth.js'
 
 export default async function handler(req: IncomingMessage & { body?: unknown }, res: ServerResponse) {
   if (req.method !== 'GET') {

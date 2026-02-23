@@ -1,8 +1,8 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { getEnv } from '../_lib/env'
-import { fetchAllowedModels } from '../_lib/openrouter-models'
-import { methodNotAllowed, sendJson } from '../_lib/http'
-import { requireClerkUserId } from '../_lib/auth'
+import { getEnv } from '../_lib/env.js'
+import { fetchAllowedModels } from '../_lib/openrouter-models.js'
+import { methodNotAllowed, sendJson } from '../_lib/http.js'
+import { requireClerkUserId } from '../_lib/auth.js'
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   if (req.method !== 'GET') {

@@ -1,6 +1,6 @@
 import { createClient } from '@libsql/client'
-import { assertTursoEnv, type AppEnv } from '../env'
-import { runMigrations } from './migrator'
+import { assertTursoEnv, type AppEnv } from '../env.js'
+import { runMigrations } from './migrator.js'
 
 export async function createTursoDb(env: AppEnv) {
   assertTursoEnv(env)

@@ -8,13 +8,13 @@ import {
   type LanguageModelUsage,
   type UIMessage,
 } from 'ai'
-import { getEnv } from '../_lib/env'
-import { assertOpenRouterApiKey } from '../_lib/env'
-import { getDb } from '../_lib/db/adapter'
-import { readBodyJson, sendJson } from '../_lib/http'
-import { requireClerkUserId } from '../_lib/auth'
-import { fetchAllowedModels, isModelAllowed } from '../_lib/openrouter-models'
-import { loadChatSystemPrompt } from '../_lib/chat-system-prompt'
+import { getEnv } from '../_lib/env.js'
+import { assertOpenRouterApiKey } from '../_lib/env.js'
+import { getDb } from '../_lib/db/adapter.js'
+import { readBodyJson, sendJson } from '../_lib/http.js'
+import { requireClerkUserId } from '../_lib/auth.js'
+import { fetchAllowedModels, isModelAllowed } from '../_lib/openrouter-models.js'
+import { loadChatSystemPrompt } from '../_lib/chat-system-prompt.js'
 
 const MAX_USER_MESSAGE_CHARS = 15_000
 const MAX_MESSAGES_BEFORE_SEND = 8

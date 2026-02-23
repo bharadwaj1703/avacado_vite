@@ -1,9 +1,9 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { getDb } from '../_lib/db/adapter'
-import { methodNotAllowed, readBodyJson, sendJson } from '../_lib/http'
-import { requireClerkUserId } from '../_lib/auth'
-import { getEnv } from '../_lib/env'
-import { fetchAllowedModels, isModelAllowed } from '../_lib/openrouter-models'
+import { getDb } from '../_lib/db/adapter.js'
+import { methodNotAllowed, readBodyJson, sendJson } from '../_lib/http.js'
+import { requireClerkUserId } from '../_lib/auth.js'
+import { getEnv } from '../_lib/env.js'
+import { fetchAllowedModels, isModelAllowed } from '../_lib/openrouter-models.js'
 
 const MAX_CHATS = 50
 

@@ -1,5 +1,5 @@
-import { assertD1Env, type AppEnv } from '../env'
-import { runMigrations } from './migrator'
+import { assertD1Env, type AppEnv } from '../env.js'
+import { runMigrations } from './migrator.js'
 
 type D1Response<T> = {
   success: boolean

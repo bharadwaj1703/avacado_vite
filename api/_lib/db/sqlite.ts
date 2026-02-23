@@ -1,7 +1,7 @@
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 import type { AppEnv } from '../env'
-import { runMigrations } from './migrator'
+import { runMigrations } from './migrator.js'
 
 type BunQuery = {
   run: (...params: unknown[]) => unknown

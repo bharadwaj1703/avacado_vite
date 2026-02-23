@@ -1,4 +1,4 @@
-import { MIGRATIONS } from './migrations'
+import { MIGRATIONS } from './migrations/index.js'
 
 type MigrationRunnerClient = {
   getMany<T>(sql: string, params?: unknown[]): Promise<T[]>

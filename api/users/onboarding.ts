@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { getDb } from '../_lib/db/adapter'
-import { methodNotAllowed, readBodyJson, sendJson } from '../_lib/http'
-import { requireClerkUserId } from '../_lib/auth'
+import { getDb } from '../_lib/db/adapter.js'
+import { methodNotAllowed, readBodyJson, sendJson } from '../_lib/http.js'
+import { requireClerkUserId } from '../_lib/auth.js'
 import type { OnboardingInput } from '../_lib/types'
 
 export default async function handler(req: IncomingMessage & { body?: unknown }, res: ServerResponse) {

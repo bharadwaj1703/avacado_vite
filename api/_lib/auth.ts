@@ -1,8 +1,8 @@
 import type { IncomingMessage } from 'node:http'
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { verifyToken } from '@clerk/backend'
-import { assertClerkSecret, assertWebhookSecret, getEnv } from './env'
-import { getBearerToken, readBodyText } from './http'
+import { assertClerkSecret, assertWebhookSecret, getEnv } from './env.js'
+import { getBearerToken, readBodyText } from './http.js'
 
 function getCookieValue(req: IncomingMessage, name: string): string | null {
   const rawCookie = req.headers.cookie

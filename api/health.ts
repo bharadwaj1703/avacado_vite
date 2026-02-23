@@ -1,6 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
-import { getDb } from './_lib/db/adapter'
-import { methodNotAllowed, sendJson } from './_lib/http'
+import { getDb } from './_lib/db/adapter.js'
+import { methodNotAllowed, sendJson } from './_lib/http.js'
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   if (req.method !== 'GET') {
