@@ -20,9 +20,10 @@ export type AppDb = {
   upsertUserFromClerk: (params: { clerkUserId: string; leadId?: string; displayName?: string }) => Promise<string>
   updateOnboarding: (params: { clerkUserId: string; input: OnboardingInput }) => Promise<{ userId: string; onboardingCompletedAt?: string }>
   insertActivity: (params: { clerkUserId: string; input: RecordActivityInput }) => Promise<string | null>
-  createChat: (userId: string, title?: string | null) => Promise<string>
+  createChat: (userId: string, modelId: string, title?: string | null) => Promise<string>
   getChatById: (id: string) => Promise<ChatRow | null>
   listChatsByUserId: (userId: string, limit?: number) => Promise<ChatRow[]>
+  softDeleteChat: (id: string) => Promise<void>
   updateChatStatus: (id: string, status: ChatStatus) => Promise<void>
   updateChatUpdatedAt: (id: string) => Promise<void>
   insertMessage: (
@@ -169,13 +170,13 @@ async function createDb(env: AppEnv): Promise<AppDb> {
 
   async function countChatsByUserId(userId: string): Promise<number> {
     const row = await client.getOne<{ count: number }>(
-      'SELECT COUNT(*) as count FROM chats WHERE user_id = ?',
+      'SELECT COUNT(*) as count FROM chats WHERE user_id = ? AND deleted_at IS NULL',
       [userId]
     )
     return row?.count ?? 0
   }
 
-  async function createChat(userId: string, title?: string | null): Promise<string> {
+  async function createChat(userId: string, modelId: string, title?: string | null): Promise<string> {
     const count = await countChatsByUserId(userId)
     if (count >= MAX_CHATS_PER_USER) {
       throw new Error('Max 50 chats per user.')
@@ -186,18 +187,58 @@ async function createDb(env: AppEnv): Promise<AppDb> {
       'INSERT INTO chats (id, user_id, title, status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
       [id, userId, title ?? null, 'awaiting_user', now, now]
     )
+    await client.run(
+      'INSERT INTO chat_models (chat_id, model_id, created_at, updated_at) VALUES (?, ?, ?, ?)',
+      [id, modelId, now, now]
+    )
     return id
   }
 
   async function getChatById(id: string): Promise<ChatRow | null> {
-    return client.getOne<ChatRow>('SELECT * FROM chats WHERE id = ?', [id])
+    return client.getOne<ChatRow>(
+      `SELECT
+        c.id,
+        c.user_id,
+        c.title,
+        cm.model_id,
+        c.deleted_at,
+        c.status,
+        c.created_at,
+        c.updated_at
+      FROM chats c
+      LEFT JOIN chat_models cm ON cm.chat_id = c.id
+      WHERE c.id = ? AND c.deleted_at IS NULL`,
+      [id]
+    )
   }
 
   async function listChatsByUserId(userId: string, limit = 50): Promise<ChatRow[]> {
     return client.getMany<ChatRow>(
-      'SELECT * FROM chats WHERE user_id = ? ORDER BY updated_at DESC LIMIT ?',
+      `SELECT
+        c.id,
+        c.user_id,
+        c.title,
+        cm.model_id,
+        c.deleted_at,
+        c.status,
+        c.created_at,
+        c.updated_at
+      FROM chats c
+      LEFT JOIN chat_models cm ON cm.chat_id = c.id
+      WHERE c.user_id = ? AND c.deleted_at IS NULL
+      ORDER BY c.updated_at DESC
+      LIMIT ?`,
       [userId, limit]
     )
+  }
+
+  async function softDeleteChat(id: string): Promise<void> {
+    const now = new Date().toISOString()
+    await client.run('UPDATE chats SET deleted_at = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL', [
+      now,
+      now,
+      id,
+    ])
   }
 
   async function updateChatStatus(id: string, status: ChatStatus): Promise<void> {
@@ -216,9 +257,10 @@ async function createDb(env: AppEnv): Promise<AppDb> {
     content: string,
     options?: { usage?: string; stopReason?: string | null }
   ): Promise<string> {
-    const rows = await client.getOne<{ count: number }>('SELECT COUNT(*) as count FROM messages WHERE chat_id = ?', [
-      chatId,
-    ])
+    const rows = await client.getOne<{ count: number }>(
+      "SELECT COUNT(*) as count FROM messages WHERE chat_id = ? AND role != 'system'",
+      [chatId]
+    )
     const count = rows?.count ?? 0
     if (count >= MAX_MESSAGES_PER_CHAT) {
       throw new Error('Max 10 messages per chat.')
@@ -242,7 +284,7 @@ async function createDb(env: AppEnv): Promise<AppDb> {
   async function hasUserActiveChat(userId: string): Promise<boolean> {
     const placeholders = ACTIVE_STATUSES.map(() => '?').join(',')
     const row = await client.getOne<{ n: number }>(
-      `SELECT 1 as n FROM chats WHERE user_id = ? AND status IN (${placeholders}) LIMIT 1`,
+      `SELECT 1 as n FROM chats WHERE user_id = ? AND deleted_at IS NULL AND status IN (${placeholders}) LIMIT 1`,
       [userId, ...ACTIVE_STATUSES]
     )
     return row != null
@@ -258,6 +300,7 @@ async function createDb(env: AppEnv): Promise<AppDb> {
     createChat,
     getChatById,
     listChatsByUserId,
+    softDeleteChat,
     updateChatStatus,
     updateChatUpdatedAt,
     insertMessage,

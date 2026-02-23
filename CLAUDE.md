@@ -24,5 +24,6 @@ An education focused app for learning AI and tech concepts
 - In a complex codebase or for a reuqest requiring complex changes - use sub-agents read the files and get specific context
 - Mention in the plan what exactly will you change where and downstream changes required (avoid backward compatability), list breaking downstream changes to be changed as todo items/part of the plan
 - On approval, use or create sub-agents (if available) to execute the changes - make sure you give specific instructions. You are likely to have access to "kimi" as a cli agent as well
+- You MUST instruct sub-agents to use read, write, edit tools and not "cat > ...." 
 - After the changes, see if a tool can allow you to verify your changes (browser access for design/frontend changes) and/or cli commands for bacend changes. Verify your changes for correctness, and ensure no bugs before claiming that a request is done/finished
 - DO NOT UNDER ANY CURCUMSTANCES read/write/peak/print .env.* files THEY ARE STRICTLY OFF LIMITS NO EXCEPTIONS

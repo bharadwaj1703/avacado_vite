@@ -1,6 +1,6 @@
-import { useSyncUserOnAuth } from '@/hooks/useAppUser'
+import { useAppUserProfile } from '@/hooks/useAppUser'
 
 export function AppUserSync() {
-  useSyncUserOnAuth()
+  useAppUserProfile()
   return null
 }

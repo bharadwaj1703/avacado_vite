@@ -15,6 +15,7 @@ import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PaywallFullRouteImport } from './routes/paywall/full'
 import { Route as AppRewardsRouteImport } from './routes/_app/rewards'
 import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppMeRouteImport } from './routes/_app/me'
@@ -23,6 +24,8 @@ import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
 import { Route as AppChatRouteImport } from './routes/_app/chat'
 import { Route as AppLearnIndexRouteImport } from './routes/_app/learn/index'
 import { Route as AppQuizQuizIdRouteImport } from './routes/_app/quiz.$quizId'
+import { Route as AppExploreCategoryIdRouteImport } from './routes/_app/explore.$categoryId'
+import { Route as AppChatNewRouteImport } from './routes/_app/chat.new'
 import { Route as AppChatChatIdRouteImport } from './routes/_app/chat.$chatId'
 import { Route as AppLearnMilestoneIdIndexRouteImport } from './routes/_app/learn/$milestoneId/index'
 import { Route as LessonMilestoneIdLevelIdLessonIdRouteImport } from './routes/lesson.$milestoneId.$levelId.$lessonId'
@@ -55,6 +58,11 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaywallFullRoute = PaywallFullRouteImport.update({
+  id: '/paywall/full',
+  path: '/paywall/full',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppRewardsRoute = AppRewardsRouteImport.update({
@@ -97,6 +105,16 @@ const AppQuizQuizIdRoute = AppQuizQuizIdRouteImport.update({
   path: '/quiz/$quizId',
   getParentRoute: () => AppRoute,
 } as any)
+const AppExploreCategoryIdRoute = AppExploreCategoryIdRouteImport.update({
+  id: '/explore/$categoryId',
+  path: '/explore/$categoryId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppChatNewRoute = AppChatNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AppChatRoute,
+} as any)
 const AppChatChatIdRoute = AppChatChatIdRouteImport.update({
   id: '/$chatId',
   path: '/$chatId',
@@ -133,7 +151,10 @@ export interface FileRoutesByFullPath {
   '/me': typeof AppMeRoute
   '/profile': typeof AppProfileRoute
   '/rewards': typeof AppRewardsRoute
+  '/paywall/full': typeof PaywallFullRoute
   '/chat/$chatId': typeof AppChatChatIdRoute
+  '/chat/new': typeof AppChatNewRoute
+  '/explore/$categoryId': typeof AppExploreCategoryIdRoute
   '/quiz/$quizId': typeof AppQuizQuizIdRoute
   '/learn/': typeof AppLearnIndexRoute
   '/learn/$milestoneId/$levelId': typeof AppLearnMilestoneIdLevelIdRoute
@@ -152,7 +173,10 @@ export interface FileRoutesByTo {
   '/me': typeof AppMeRoute
   '/profile': typeof AppProfileRoute
   '/rewards': typeof AppRewardsRoute
+  '/paywall/full': typeof PaywallFullRoute
   '/chat/$chatId': typeof AppChatChatIdRoute
+  '/chat/new': typeof AppChatNewRoute
+  '/explore/$categoryId': typeof AppExploreCategoryIdRoute
   '/quiz/$quizId': typeof AppQuizQuizIdRoute
   '/learn': typeof AppLearnIndexRoute
   '/learn/$milestoneId/$levelId': typeof AppLearnMilestoneIdLevelIdRoute
@@ -173,7 +197,10 @@ export interface FileRoutesById {
   '/_app/me': typeof AppMeRoute
   '/_app/profile': typeof AppProfileRoute
   '/_app/rewards': typeof AppRewardsRoute
+  '/paywall/full': typeof PaywallFullRoute
   '/_app/chat/$chatId': typeof AppChatChatIdRoute
+  '/_app/chat/new': typeof AppChatNewRoute
+  '/_app/explore/$categoryId': typeof AppExploreCategoryIdRoute
   '/_app/quiz/$quizId': typeof AppQuizQuizIdRoute
   '/_app/learn/': typeof AppLearnIndexRoute
   '/_app/learn/$milestoneId/$levelId': typeof AppLearnMilestoneIdLevelIdRoute
@@ -194,7 +221,10 @@ export interface FileRouteTypes {
     | '/me'
     | '/profile'
     | '/rewards'
+    | '/paywall/full'
     | '/chat/$chatId'
+    | '/chat/new'
+    | '/explore/$categoryId'
     | '/quiz/$quizId'
     | '/learn/'
     | '/learn/$milestoneId/$levelId'
@@ -213,7 +243,10 @@ export interface FileRouteTypes {
     | '/me'
     | '/profile'
     | '/rewards'
+    | '/paywall/full'
     | '/chat/$chatId'
+    | '/chat/new'
+    | '/explore/$categoryId'
     | '/quiz/$quizId'
     | '/learn'
     | '/learn/$milestoneId/$levelId'
@@ -233,7 +266,10 @@ export interface FileRouteTypes {
     | '/_app/me'
     | '/_app/profile'
     | '/_app/rewards'
+    | '/paywall/full'
     | '/_app/chat/$chatId'
+    | '/_app/chat/new'
+    | '/_app/explore/$categoryId'
     | '/_app/quiz/$quizId'
     | '/_app/learn/'
     | '/_app/learn/$milestoneId/$levelId'
@@ -248,6 +284,7 @@ export interface RootRouteChildren {
   OnboardingRoute: typeof OnboardingRoute
   SignupRoute: typeof SignupRoute
   SplashRoute: typeof SplashRoute
+  PaywallFullRoute: typeof PaywallFullRoute
   LessonMilestoneIdLevelIdLessonIdRoute: typeof LessonMilestoneIdLevelIdLessonIdRoute
 }
 
@@ -293,6 +330,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/paywall/full': {
+      id: '/paywall/full'
+      path: '/paywall/full'
+      fullPath: '/paywall/full'
+      preLoaderRoute: typeof PaywallFullRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/rewards': {
@@ -351,6 +395,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppQuizQuizIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/explore/$categoryId': {
+      id: '/_app/explore/$categoryId'
+      path: '/explore/$categoryId'
+      fullPath: '/explore/$categoryId'
+      preLoaderRoute: typeof AppExploreCategoryIdRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/chat/new': {
+      id: '/_app/chat/new'
+      path: '/new'
+      fullPath: '/chat/new'
+      preLoaderRoute: typeof AppChatNewRouteImport
+      parentRoute: typeof AppChatRoute
+    }
     '/_app/chat/$chatId': {
       id: '/_app/chat/$chatId'
       path: '/$chatId'
@@ -384,10 +442,12 @@ declare module '@tanstack/react-router' {
 
 interface AppChatRouteChildren {
   AppChatChatIdRoute: typeof AppChatChatIdRoute
+  AppChatNewRoute: typeof AppChatNewRoute
 }
 
 const AppChatRouteChildren: AppChatRouteChildren = {
   AppChatChatIdRoute: AppChatChatIdRoute,
+  AppChatNewRoute: AppChatNewRoute,
 }
 
 const AppChatRouteWithChildren =
@@ -400,6 +460,7 @@ interface AppRouteChildren {
   AppMeRoute: typeof AppMeRoute
   AppProfileRoute: typeof AppProfileRoute
   AppRewardsRoute: typeof AppRewardsRoute
+  AppExploreCategoryIdRoute: typeof AppExploreCategoryIdRoute
   AppQuizQuizIdRoute: typeof AppQuizQuizIdRoute
   AppLearnIndexRoute: typeof AppLearnIndexRoute
   AppLearnMilestoneIdLevelIdRoute: typeof AppLearnMilestoneIdLevelIdRoute
@@ -413,6 +474,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppMeRoute: AppMeRoute,
   AppProfileRoute: AppProfileRoute,
   AppRewardsRoute: AppRewardsRoute,
+  AppExploreCategoryIdRoute: AppExploreCategoryIdRoute,
   AppQuizQuizIdRoute: AppQuizQuizIdRoute,
   AppLearnIndexRoute: AppLearnIndexRoute,
   AppLearnMilestoneIdLevelIdRoute: AppLearnMilestoneIdLevelIdRoute,
@@ -428,6 +490,7 @@ const rootRouteChildren: RootRouteChildren = {
   OnboardingRoute: OnboardingRoute,
   SignupRoute: SignupRoute,
   SplashRoute: SplashRoute,
+  PaywallFullRoute: PaywallFullRoute,
   LessonMilestoneIdLevelIdLessonIdRoute: LessonMilestoneIdLevelIdLessonIdRoute,
 }
 export const routeTree = rootRouteImport

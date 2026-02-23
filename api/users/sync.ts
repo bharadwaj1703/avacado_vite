@@ -14,10 +14,17 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     return
   }
 
+  let clerkUserId: string
   try {
-    const clerkUserId = await requireClerkUserId(req)
-    const body = await readBodyJson<SyncBody>(req)
+    clerkUserId = await requireClerkUserId(req)
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    sendJson(res, 401, { error: message })
+    return
+  }
 
+  try {
+    const body = await readBodyJson<SyncBody>(req)
     const db = await getDb()
     const userId = await db.upsertUserFromClerk({
       clerkUserId,
@@ -28,6 +35,7 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     sendJson(res, 200, { userId })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error'
-    sendJson(res, 401, { error: message })
+    const statusCode = message.toLowerCase().includes('database is locked') ? 503 : 500
+    sendJson(res, statusCode, { error: message })
   }
 }

@@ -25,7 +25,7 @@ async function parseJson(response: Response): Promise<unknown> {
 export async function apiRequest<TResponse>(
   path: string,
   options: {
-    method?: 'GET' | 'POST'
+    method?: 'GET' | 'POST' | 'DELETE'
     tokenProvider?: AuthTokenProvider
     body?: unknown
   } = {}

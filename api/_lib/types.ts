@@ -68,6 +68,8 @@ export type ChatRow = {
   id: string
   user_id: string
   title: string | null
+  model_id: string | null
+  deleted_at: string | null
   status: ChatStatus
   created_at: string
   updated_at: string

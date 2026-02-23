@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import {
@@ -63,30 +64,32 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
   const db = await getDb()
   const user = await db.findUserByClerkId(clerkUserId)
   if (!user) {
-    sendJson(res, 401, { error: 'User not found.' })
+    sendJson(res, 404, { error: 'User not found.' })
     return
   }
   const userId = user.id
 
-  let body: { id: string; message: UIMessage; model?: string }
+  let body: { id: string; message: UIMessage }
   try {
-    body = await readBodyJson<{ id: string; message: UIMessage; model?: string }>(req)
+    body = await readBodyJson<{ id: string; message: UIMessage }>(req)
   } catch {
     sendJson(res, 400, { error: 'Invalid JSON body.' })
     return
   }
-  const { id: chatId, message: incomingMessage, model: requestedModel } = body
+
+  const { id: chatId, message: incomingMessage } = body
   if (!chatId || !incomingMessage) {
     sendJson(res, 400, { error: 'Missing id or message.' })
     return
   }
 
-  const chat = await db.getChatById(chatId)
-  if (!chat) {
-    sendJson(res, 404, { error: 'Not found.' })
+  if (incomingMessage.role !== 'user') {
+    sendJson(res, 400, { error: 'Only user messages can be sent.' })
     return
   }
-  if (chat.user_id !== userId) {
+
+  const chat = await db.getChatById(chatId)
+  if (!chat || chat.user_id !== userId) {
     sendJson(res, 404, { error: 'Not found.' })
     return
   }
@@ -96,12 +99,6 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     sendJson(res, 409, {
       error: 'Another chat is still generating a response. Wait for it to finish before sending a new message.',
     })
-    return
-  }
-
-  const messageRows = await db.listMessagesByChatId(chatId)
-  if (messageRows.length > MAX_MESSAGES_BEFORE_SEND) {
-    sendJson(res, 400, { error: 'Maximum 10 messages per chat. Start a new chat.' })
     return
   }
 
@@ -115,14 +112,42 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
   assertOpenRouterApiKey(env)
   const allowedModels = await fetchAllowedModels(env)
   const defaultModelId = allowedModels[0]?.id
-  const modelId = requestedModel && isModelAllowed(requestedModel, allowedModels) ? requestedModel : defaultModelId
-  if (!modelId) {
+  const requestedModelId = chat.model_id?.trim() || defaultModelId
+
+  if (!requestedModelId) {
     sendJson(res, 400, { error: 'No allowed model available.' })
     return
   }
 
-  const systemPrompt = loadChatSystemPrompt()
+  if (!isModelAllowed(requestedModelId, allowedModels)) {
+    sendJson(res, 400, { error: 'The model configured for this chat is not allowed.' })
+    return
+  }
 
+  let messageRows = await db.listMessagesByChatId(chatId)
+  const hasSystemMessage = messageRows.some((row) => row.role === 'system')
+
+  if (!hasSystemMessage) {
+    const systemPrompt = loadChatSystemPrompt()
+    const systemMessage: UIMessage = {
+      id: `sys_${randomUUID()}`,
+      role: 'system',
+      parts: [{ type: 'text', text: systemPrompt }],
+    }
+    await db.insertMessage(chatId, 'system', JSON.stringify(systemMessage))
+    messageRows = await db.listMessagesByChatId(chatId)
+  }
+
+  const nonSystemCount = messageRows.filter((row) => row.role !== 'system').length
+  if (nonSystemCount > MAX_MESSAGES_BEFORE_SEND) {
+    sendJson(res, 400, { error: 'Maximum 10 messages per chat. Start a new chat.' })
+    return
+  }
+
+  await db.updateChatStatus(chatId, 'awaiting_llm')
+  await db.insertMessage(chatId, 'user', JSON.stringify(incomingMessage))
+
+  messageRows = await db.listMessagesByChatId(chatId)
   const uiMessages: UIMessage[] = []
   for (const row of messageRows) {
     const parsed = parseStoredContent(row.content)
@@ -134,12 +159,9 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
       })
     }
   }
-  uiMessages.push(incomingMessage)
 
-  await db.updateChatStatus(chatId, 'streaming')
-
-  const openrouter = createOpenRouter({ apiKey: env.openrouterApiKey! })
-  const model = openrouter.chat(modelId)
+  const openrouter = createOpenRouter({ apiKey: env.openrouterApiKey })
+  const model = openrouter.chat(requestedModelId)
 
   let lastUsage: LanguageModelUsage | null = null
   let lastFinishReason: string | undefined
@@ -149,9 +171,10 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
   try {
     const result = streamText({
       model,
-      system: systemPrompt,
       messages: await convertToModelMessages(uiMessages),
     })
+
+    await db.updateChatStatus(chatId, 'streaming')
 
     result.pipeUIMessageStreamToResponse(res, {
       originalMessages: uiMessages,
@@ -163,25 +186,33 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
         }
         return undefined
       },
-      onFinish: async ({ messages, responseMessage, isAborted }) => {
-        const status = isAborted ? 'errored' : 'ready'
-        await db.updateChatStatus(chatId, status)
-        const userMsg = messages[messages.length - 2]
-        const assistantMsg = responseMessage
-        if (userMsg) {
-          await db.insertMessage(chatId, 'user', JSON.stringify(userMsg))
-        }
-        const usageJson = lastUsage
-          ? JSON.stringify({
-              promptTokens: lastUsage.inputTokens,
-              completionTokens: lastUsage.outputTokens,
-              totalTokens: lastUsage.totalTokens,
+      onFinish: async ({ responseMessage, isAborted }) => {
+        try {
+          const status = isAborted ? 'errored' : 'ready'
+          await db.updateChatStatus(chatId, status)
+
+          if (!isAborted && responseMessage) {
+            const usageJson = lastUsage
+              ? JSON.stringify({
+                  promptTokens: lastUsage.inputTokens,
+                  completionTokens: lastUsage.outputTokens,
+                  totalTokens: lastUsage.totalTokens,
+                })
+              : undefined
+
+            await db.insertMessage(chatId, 'assistant', JSON.stringify(responseMessage), {
+              usage: usageJson,
+              stopReason: lastFinishReason ?? null,
             })
-          : undefined
-        await db.insertMessage(chatId, 'assistant', JSON.stringify(assistantMsg), {
-          usage: usageJson,
-          stopReason: lastFinishReason ?? null,
-        })
+          }
+        } catch (err) {
+          console.error('onFinish failed:', err)
+          try {
+            await db.updateChatStatus(chatId, 'errored')
+          } catch {
+            // best-effort
+          }
+        }
       },
       onError: () => 'An error occurred.',
     })

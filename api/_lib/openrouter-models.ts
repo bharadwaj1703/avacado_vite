@@ -2,17 +2,11 @@ import type { AppEnv } from './env'
 
 const OPENROUTER_MODELS_URL = 'https://openrouter.ai/api/v1/models'
 
-/** Input-related pricing keys (per token); take max for input $/Mtok */
-const INPUT_PRICE_KEYS = [
+const OUTPUT_PRICE_EXCLUDED_KEYS = new Set([
   'prompt',
-  'image',
-  'audio',
   'input_cache_read',
   'input_cache_write',
-] as const
-
-/** Output-related pricing keys (per token); take max for output $/Mtok */
-const OUTPUT_PRICE_KEYS = ['completion', 'internal_reasoning'] as const
+])
 
 const PRICE_PER_MTOK_FACTOR = 1_000_000
 
@@ -24,13 +18,19 @@ function parsePrice(value: string | undefined): number {
   return Number.isFinite(n) ? n : 0
 }
 
-function maxPricePerMtok(pricing: PricingRecord, keys: readonly string[]): number {
+function inputPricePerMtok(pricing: PricingRecord): number {
+  return parsePrice(pricing.prompt) * PRICE_PER_MTOK_FACTOR
+}
+
+function outputPricePerMtok(pricing: PricingRecord): number {
   let max = 0
-  for (const key of keys) {
-    const v = parsePrice(pricing[key])
-    const perMtok = v * PRICE_PER_MTOK_FACTOR
+
+  for (const [key, rawValue] of Object.entries(pricing)) {
+    if (OUTPUT_PRICE_EXCLUDED_KEYS.has(key)) continue
+    const perMtok = parsePrice(rawValue) * PRICE_PER_MTOK_FACTOR
     if (perMtok > max) max = perMtok
   }
+
   return max
 }
 
@@ -59,8 +59,8 @@ export function filterModelsByPricing(
 
   for (const m of models) {
     const p = pricing(m.pricing)
-    const inputPerMtok = maxPricePerMtok(p, INPUT_PRICE_KEYS)
-    const outputPerMtok = maxPricePerMtok(p, OUTPUT_PRICE_KEYS)
+    const inputPerMtok = inputPricePerMtok(p)
+    const outputPerMtok = outputPricePerMtok(p)
     if (
       inputPerMtok <= env.aiModelMaxInputPricePerMtok &&
       outputPerMtok <= env.aiModelMaxOutputPricePerMtok

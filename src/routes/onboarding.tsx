@@ -1,9 +1,10 @@
 import { useState, useRef } from 'react'
 import type { MutableRefObject } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, useNavigate, Navigate } from '@tanstack/react-router'
 import { useAuth } from '@clerk/clerk-react'
 import { animate, createScope } from 'animejs'
-import { OnboardingRouteGuard } from '@/components/auth/AuthGuards'
+import { SignedInGuard } from '@/components/auth/AuthGuards'
+import { useAppUserProfile } from '@/hooks/useAppUser'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { RadioQuestion } from '@/components/quiz/RadioQuestion'
@@ -63,7 +64,9 @@ function buildSteps(profession: Profession | null): StepKey[] {
   return steps
 }
 
-type OnboardingPhase = 'steps' | 'saving' | 'celebration' | 'exiting'
+type OnboardingPhase = 'steps' | 'saving' | 'celebration' | 'exiting' | 'loading'
+
+const REQUIRED_STEPS: Set<StepKey> = new Set(['profession', 'timeCommitment', 'preferredTiming'])
 
 function OnboardingPage() {
   const navigate = useNavigate()
@@ -77,6 +80,9 @@ function OnboardingPage() {
   const [timeSpan, setTimeSpan] = useState<5 | 10 | 15 | 20 | 30 | null>(null)
   const [frequency, setFrequency] = useState<Frequency | ''>('')
   const [preferredTiming, setPreferredTiming] = useState<Timing | ''>('')
+  const [validationError, setValidationError] = useState<string | null>(null)
+
+  const { data: profile, isLoading: profileLoading } = useAppUserProfile()
 
   const steps = buildSteps(profession)
   const [stepIndex, setStepIndex] = useState(0)
@@ -86,6 +92,12 @@ function OnboardingPage() {
 
   const completionRootRef = useRef<HTMLDivElement>(null)
   const scopeRef = useRef<ReturnType<typeof createScope> | null>(null)
+
+  // Only redirect if user hasn't started the post-submit flow locally.
+  // Once preferredTiming is answered and submitted, local phase state drives the flow.
+  if (phase === 'steps' && !profileLoading && profile?.onboardingCompletedAt && !preferredTiming) {
+    return <Navigate to="/dashboard" />
+  }
 
   async function submitOnboarding() {
     const timezone = typeof Intl !== 'undefined' ? Intl.DateTimeFormat().resolvedOptions().timeZone : undefined
@@ -109,6 +121,17 @@ function OnboardingPage() {
   }
 
   async function handleContinue() {
+    if (REQUIRED_STEPS.has(currentStepKey) && !stepComplete) {
+      const messages: Record<string, string> = {
+        profession: 'Please select your profession to continue.',
+        timeCommitment: 'Please select both a time duration and frequency.',
+        preferredTiming: 'Please select when you prefer to learn.',
+      }
+      setValidationError(messages[currentStepKey] ?? 'Please complete this step.')
+      return
+    }
+    setValidationError(null)
+
     if (isLastStep) {
       setPhase('saving')
       try {
@@ -147,18 +170,18 @@ function OnboardingPage() {
     setPhase('exiting')
 
     if (!completionRootRef.current) {
-      navigate({ to: '/dashboard' })
+      setPhase('loading')
       return
     }
 
     const scope = scopeRef.current
     if (scope?.methods?.exit) {
       scope.methods.exit()
-      window.setTimeout(() => navigate({ to: '/dashboard' }), 450)
+      window.setTimeout(() => setPhase('loading'), 450)
       return
     }
 
-    navigate({ to: '/dashboard' })
+    setPhase('loading')
   }
 
   if (phase === 'saving') {
@@ -182,6 +205,10 @@ function OnboardingPage() {
     )
   }
 
+  if (phase === 'loading') {
+    return <PersonalisingLoader onComplete={() => navigate({ to: '/paywall/full' })} />
+  }
+
   const stepQuestion =
     currentStepKey === 'profession'
       ? 'What describes you the best?'
@@ -201,7 +228,7 @@ function OnboardingPage() {
     <div className="flex min-h-dvh flex-col">
       <header className="fixed top-0 left-0 right-0 z-10 flex flex-col border-b border-border bg-background">
         <OnboardingProgressBar totalSteps={totalSteps} currentStep={stepIndex} />
-        <div className="flex min-h-[100px] items-center px-4 py-3">
+        <div className="mx-auto flex min-h-[100px] max-w-md items-center px-4 py-3">
           <OnboardingMascotBubble question={stepQuestion} variant="header" className="w-full" />
         </div>
       </header>
@@ -213,7 +240,7 @@ function OnboardingPage() {
               prompt=""
               options={PROFESSION_OPTIONS}
               selected={profession ? [profession] : []}
-              onSelect={(id) => setProfession(id as Profession)}
+              onSelect={(id) => { setValidationError(null); setProfession(id as Profession) }}
             />
           )}
 
@@ -253,7 +280,7 @@ function OnboardingPage() {
                     type="button"
                     variant={timeSpan === m ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setTimeSpan(m)}
+                    onClick={() => { setValidationError(null); setTimeSpan(m) }}
                   >
                     {m} mins
                   </Button>
@@ -265,7 +292,7 @@ function OnboardingPage() {
                   prompt=""
                   options={FREQUENCY_OPTIONS}
                   selected={frequency ? [frequency] : []}
-                  onSelect={(value) => setFrequency(value as Frequency)}
+                  onSelect={(value) => { setValidationError(null); setFrequency(value as Frequency) }}
                 />
               </div>
             </div>
@@ -276,7 +303,7 @@ function OnboardingPage() {
               prompt=""
               options={TIMING_OPTIONS}
               selected={preferredTiming ? [preferredTiming] : []}
-              onSelect={(value) => setPreferredTiming(value as Timing)}
+              onSelect={(value) => { setValidationError(null); setPreferredTiming(value as Timing) }}
             />
           )}
         </PageContainer>
@@ -284,13 +311,16 @@ function OnboardingPage() {
 
       <PageContainer className="max-w-md px-4 pb-8">
         <div className="flex flex-col gap-3">
+          {validationError && (
+            <p className="text-center text-sm font-medium text-destructive">{validationError}</p>
+          )}
           {currentStepKey === 'companyWebsite' && (
             <Button variant="outline" size="lg" className="w-full" onClick={handleSkip}>
               Skip
             </Button>
           )}
-          <Button onClick={handleContinue} disabled={!stepComplete} size="lg" className="w-full">
-            {isLastStep ? "Let's go!" : 'Continue'}
+          <Button onClick={handleContinue} size="lg" className="w-full">
+            Continue
           </Button>
         </div>
       </PageContainer>
@@ -345,9 +375,9 @@ function OnboardingCompleteScreen({
 function CompletionMascot() {
   return (
     <MascotBlob
-      className="w-40"
+      className="w-80 sm:w-96"
       bodyMode="static"
-      staticBaseScale={1.3}
+      staticBaseScale={2.2}
       staticBaseOffsetX={0}
       staticBaseOffsetY={0}
       staticInnerScale={1}
@@ -373,6 +403,34 @@ function CompletionMascot() {
   )
 }
 
+function PersonalisingLoader({ onComplete }: { onComplete: () => void }) {
+  const mountedRef = useRef(false)
+
+  const setRef = (el: HTMLDivElement | null) => {
+    if (el && !mountedRef.current) {
+      mountedRef.current = true
+
+      animate(el.querySelectorAll('.pl-text'), {
+        y: [20, 0],
+        opacity: [0, 1],
+        duration: 600,
+        delay: 200,
+        ease: 'outExpo',
+      })
+
+      const duration = 3000 + Math.random() * 2000
+      window.setTimeout(() => onComplete(), duration)
+    }
+  }
+
+  return (
+    <div ref={setRef} className="flex min-h-dvh flex-col items-center justify-center gap-4">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      <p className="pl-text text-sm text-muted-foreground opacity-0">Personalising the app for you...</p>
+    </div>
+  )
+}
+
 function OnboardingFallback() {
   const navigate = useNavigate()
   return (
@@ -390,9 +448,9 @@ function OnboardingFallback() {
 export const Route = createFileRoute('/onboarding')({
   component: () => (
     <OnboardingErrorBoundary fallback={<OnboardingFallback />}>
-      <OnboardingRouteGuard>
+      <SignedInGuard>
         <OnboardingPage />
-      </OnboardingRouteGuard>
+      </SignedInGuard>
     </OnboardingErrorBoundary>
   ),
 })

@@ -5,6 +5,13 @@ export type ActivityActionKind =
 
 export type ActivityEntity = 'lesson' | 'quiz'
 
+export type AppUserProfile = {
+  id: string
+  clerkUserId: string
+  displayName: string | null
+  onboardingCompletedAt: string | null
+}
+
 export type SyncUserInput = {
   leadId?: string
   displayName?: string
@@ -53,6 +60,8 @@ export type ChatRow = {
   id: string
   user_id: string
   title: string | null
+  model_id: string | null
+  deleted_at: string | null
   status: ChatStatus
   created_at: string
   updated_at: string
@@ -73,6 +82,9 @@ export type ChatModelsResponse = {
 }
 
 export type ChatCreateResponse = ChatRow
+export type ChatListResponse = {
+  data: ChatRow[]
+}
 
 export type ChatGetResponse = {
   chat: ChatRow

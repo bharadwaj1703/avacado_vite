@@ -15,17 +15,17 @@ export function OnboardingMascotBubble({ question, className, variant = 'default
   return (
     <div
       className={cn(
-        'flex items-center gap-3',
-        !isHeader && 'flex-col gap-4 sm:flex-row sm:gap-6',
-        isHeader && 'gap-3',
+        'flex gap-3',
+        !isHeader && 'flex-col items-center gap-4 sm:flex-row sm:gap-6',
+        isHeader && 'items-center gap-3',
         className
       )}
     >
-      <div className="flex shrink-0 justify-center sm:order-2">
+      <div className={cn('flex shrink-0 justify-center sm:order-2', isHeader && '-my-3')}>
         <MascotBlob
-          className={cn(isHeader ? 'w-16 sm:w-20' : 'w-32 sm:w-40')}
+          className={cn(isHeader ? 'w-20 sm:w-24' : 'w-32 sm:w-40')}
           bodyMode="static"
-          staticBaseScale={1.2}
+          staticBaseScale={isHeader ? 1.8 : 1.2}
           staticBaseOffsetX={0}
           staticBaseOffsetY={0}
           staticInnerScale={1}

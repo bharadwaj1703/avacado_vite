@@ -29,6 +29,10 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
 
     const db = await getDb()
     const activityId = await db.insertActivity({ clerkUserId, input })
+    if (!activityId) {
+      sendJson(res, 404, { error: 'User not found.' })
+      return
+    }
     sendJson(res, 200, { activityId })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error'

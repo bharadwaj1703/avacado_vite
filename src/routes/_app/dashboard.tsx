@@ -6,6 +6,7 @@ import {
 } from '@/hooks/useContentManifest'
 import { useGating, useProgressStore, type ProgressStore } from '@/store/progress'
 import { LessonCard } from '@/components/dashboard/LessonCard'
+import { CategoryRow } from '@/components/explore/CategoryRow'
 import { Lock } from 'lucide-react'
 
 // ============================================================================
@@ -137,6 +138,7 @@ function DashboardPage() {
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-10 px-5 py-6">
+      <CategoryRow />
       {milestones.map((milestone) => {
         const isActive = milestone.id === activeMilestone?.id
         const unlocked = isMilestoneUnlocked(milestone.id)

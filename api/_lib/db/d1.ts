@@ -1,5 +1,5 @@
 import { assertD1Env, type AppEnv } from '../env'
-import { MIGRATIONS } from './migrations'
+import { runMigrations } from './migrator'
 
 type D1Response<T> = {
   success: boolean
@@ -40,9 +40,12 @@ export async function createD1Db(env: AppEnv) {
 
   return {
     migrate: async () => {
-      for (const sql of MIGRATIONS) {
-        await query(sql)
-      }
+      await runMigrations({
+        getMany: async <T>(sql: string, params: unknown[] = []) => query<T>(sql, params),
+        run: async (sql: string, params: unknown[] = []) => {
+          await query(sql, params)
+        },
+      })
     },
     health: async () => ({ provider: 'd1' as const, ok: true as const }),
     getOne: async <T>(sql: string, params: unknown[] = []) => {

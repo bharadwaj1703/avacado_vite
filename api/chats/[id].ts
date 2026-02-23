@@ -13,8 +13,8 @@ function getPathParamId(req: IncomingMessage): string | null {
 }
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
-  if (req.method !== 'GET') {
-    methodNotAllowed(res, 'GET')
+  if (req.method !== 'GET' && req.method !== 'DELETE') {
+    methodNotAllowed(res, 'GET, DELETE')
     return
   }
 
@@ -47,6 +47,12 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   }
   if (chat.user_id !== user.id) {
     sendJson(res, 404, { error: 'Not found.' })
+    return
+  }
+
+  if (req.method === 'DELETE') {
+    await db.softDeleteChat(chatId)
+    sendJson(res, 200, { ok: true })
     return
   }
 

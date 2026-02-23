@@ -2,15 +2,14 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import yaml from 'js-yaml'
 
-const CONFIG_PATH = join(process.cwd(), 'config', 'chat-system-prompt.yaml')
+const CONFIG_PATH = join(process.cwd(), 'prompts', 'ai_chat.yaml')
 
 type ChatSystemPromptYaml = { content?: string }
 
 let cached: string | null = null
 
 /**
- * Load the system prompt content from config/chat-system-prompt.yaml.
- * Used when calling the LLM; do not store in DB.
+ * Load the system prompt content from prompts/ai_chat.yaml.
  */
 export function loadChatSystemPrompt(): string {
   if (cached !== null) return cached

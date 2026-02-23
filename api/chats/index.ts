@@ -2,6 +2,8 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import { getDb } from '../_lib/db/adapter'
 import { methodNotAllowed, readBodyJson, sendJson } from '../_lib/http'
 import { requireClerkUserId } from '../_lib/auth'
+import { getEnv } from '../_lib/env'
+import { fetchAllowedModels, isModelAllowed } from '../_lib/openrouter-models'
 
 const MAX_CHATS = 50
 
@@ -23,7 +25,7 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
   const db = await getDb()
   const user = await db.findUserByClerkId(clerkUserId)
   if (!user) {
-    sendJson(res, 401, { error: 'User not found.' })
+    sendJson(res, 404, { error: 'User not found.' })
     return
   }
   const userId = user.id
@@ -48,9 +50,22 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
       sendJson(res, 400, { error: 'Maximum 50 chats per user. Delete an old chat to create a new one.' })
       return
     }
-    const body = await readBodyJson<{ title?: string | null }>(req)
+    const body = await readBodyJson<{ title?: string | null; modelId?: string }>(req)
     const title = typeof body.title === 'string' ? body.title : undefined
-    const id = await db.createChat(userId, title ?? null)
+    const modelId = typeof body.modelId === 'string' ? body.modelId.trim() : ''
+    if (!modelId) {
+      sendJson(res, 400, { error: 'Missing modelId.' })
+      return
+    }
+
+    const env = getEnv()
+    const allowedModels = await fetchAllowedModels(env)
+    if (!isModelAllowed(modelId, allowedModels)) {
+      sendJson(res, 400, { error: 'Selected model is not allowed.' })
+      return
+    }
+
+    const id = await db.createChat(userId, modelId, title ?? null)
     const chat = await db.getChatById(id)
     sendJson(res, 200, chat!)
     return

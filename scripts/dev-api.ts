@@ -23,6 +23,7 @@ if (existsSync(envPath)) {
 }
 
 import healthHandler from '../api/health'
+import meHandler from '../api/users/me'
 import syncHandler from '../api/users/sync'
 import onboardingHandler from '../api/users/onboarding'
 import activitiesHandler from '../api/activities'
@@ -36,6 +37,7 @@ type Handler = (req: IncomingMessage & { body?: unknown }, res: ServerResponse) 
 
 const routes: [string, Handler][] = [
   ['/api/health', healthHandler],
+  ['/api/users/me', meHandler],
   ['/api/users/sync', syncHandler],
   ['/api/users/onboarding', onboardingHandler],
   ['/api/activities', activitiesHandler],
@@ -63,7 +65,7 @@ const server = createServer(async (req, res) => {
   const handler = matchRoute(url.pathname)
 
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
   if (req.method === 'OPTIONS') {
