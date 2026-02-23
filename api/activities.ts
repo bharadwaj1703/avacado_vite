@@ -28,8 +28,6 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     }
 
     const db = await getDb()
-    await db.migrate()
-
     const activityId = await db.insertActivity({ clerkUserId, input })
     sendJson(res, 200, { activityId })
   } catch (error) {

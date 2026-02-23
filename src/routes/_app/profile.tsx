@@ -1,38 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { SignedIn, UserButton, useAuth, useClerk, useUser } from '@clerk/clerk-react'
-import { User } from 'lucide-react'
+import { UserButton, useClerk, useUser } from '@clerk/clerk-react'
 import { Button } from '@/components/ui/button'
 
 function ProfilePage() {
-  const { isLoaded: clerkLoaded, isSignedIn } = useAuth()
   const { user: clerkUser } = useUser()
   const clerk = useClerk()
-
-  if (!clerkLoaded) {
-    return (
-      <div className="mx-auto max-w-md px-4 py-8">
-        <p className="text-center text-sm text-muted-foreground">Loading account...</p>
-      </div>
-    )
-  }
-
-  if (!isSignedIn) {
-    return (
-      <div className="mx-auto max-w-md px-4 py-8 text-center">
-        <User className="mx-auto size-16 text-muted-foreground" />
-        <h2 className="mt-4 text-xl font-medium tracking-tight">Your Profile</h2>
-        <p className="mt-2 text-muted-foreground">Sign in to see your profile.</p>
-      </div>
-    )
-  }
 
   const displayName = clerkUser?.fullName ?? clerkUser?.username ?? '—'
   const email = clerkUser?.primaryEmailAddress?.emailAddress ?? '—'
 
   return (
-    <div className="mx-auto max-w-md space-y-6 px-4 py-6">
-      <h1 className="text-xl font-semibold tracking-tight">Profile</h1>
-
+    <div className="mx-auto max-w-2xl space-y-6 px-5 py-6">
       <div className="rounded-xl border border-border p-4">
         <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Account</p>
         <dl className="mt-3 space-y-3 text-sm">
@@ -57,12 +35,10 @@ function ProfilePage() {
         </p>
       </div>
 
-      <SignedIn>
-        <div className="flex items-center justify-between rounded-xl border border-border p-4">
-          <p className="text-sm font-medium">Account menu</p>
-          <UserButton />
-        </div>
-      </SignedIn>
+      <div className="flex items-center justify-between rounded-xl border border-border p-4">
+        <p className="text-sm font-medium">Account menu</p>
+        <UserButton />
+      </div>
 
       <Button
         className="w-full"

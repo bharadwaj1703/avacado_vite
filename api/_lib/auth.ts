@@ -1,14 +1,8 @@
 import type { IncomingMessage } from 'node:http'
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import { assertClerkSecret, assertWebhookSecret, getEnv } from '../env'
-import { getBearerToken, readBodyText } from '../http'
-
-type ClerkSessionVerifyResponse = {
-  sub?: string
-  payload?: {
-    sub?: string
-  }
-}
+import { verifyToken } from '@clerk/backend'
+import { assertClerkSecret, assertWebhookSecret, getEnv } from './env'
+import { getBearerToken, readBodyText } from './http'
 
 export async function requireClerkUserId(req: IncomingMessage): Promise<string> {
   const token = getBearerToken(req)
@@ -17,24 +11,12 @@ export async function requireClerkUserId(req: IncomingMessage): Promise<string> 
   const env = getEnv()
   assertClerkSecret(env)
 
-  const response = await fetch(`${env.clerkBackendApiUrl}/v1/sessions/verify`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${env.clerkSecretKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ token }),
+  const payload = await verifyToken(token, {
+    secretKey: env.clerkSecretKey,
   })
 
-  if (!response.ok) {
-    throw new Error('Invalid auth token')
-  }
-
-  const payload = (await response.json()) as ClerkSessionVerifyResponse
-  const clerkUserId = payload.sub ?? payload.payload?.sub
-  if (!clerkUserId) throw new Error('Unable to resolve Clerk user')
-
-  return clerkUserId
+  if (!payload.sub) throw new Error('Unable to resolve Clerk user')
+  return payload.sub
 }
 
 function decodeSvixSecret(secret: string): Buffer {

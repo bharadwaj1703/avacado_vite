@@ -1,7 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { RequireOnboardingComplete } from '@/components/auth/AuthGuards'
 import { RadialIntro } from '@/components/animate-ui/components/community/radial-intro'
-import { Trophy } from 'lucide-react'
 
 const LEADERBOARD_ORBIT_ITEMS = [
   { id: 1, name: 'Alex', src: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex' },
@@ -13,11 +11,7 @@ const LEADERBOARD_ORBIT_ITEMS = [
 
 function LeaderboardPage() {
   return (
-    <div className="mx-auto max-w-md space-y-4 px-4 py-6">
-      <div className="flex items-center gap-2">
-        <Trophy className="size-6 text-primary" />
-        <h1 className="text-xl font-semibold">Leaderboard</h1>
-      </div>
+    <div className="mx-auto max-w-2xl space-y-4 px-5 py-6">
       <div className="mb-8 flex justify-center">
         <RadialIntro orbitItems={LEADERBOARD_ORBIT_ITEMS} stageSize={320} imageSize={56} />
       </div>
@@ -31,9 +25,5 @@ function LeaderboardPage() {
 }
 
 export const Route = createFileRoute('/_app/leaderboard')({
-  component: () => (
-    <RequireOnboardingComplete>
-      <LeaderboardPage />
-    </RequireOnboardingComplete>
-  ),
+  component: LeaderboardPage,
 })

@@ -36,3 +36,29 @@ export function getBearerToken(req: IncomingMessage): string | null {
 export function methodNotAllowed(res: ServerResponse, method: string) {
   sendJson(res, 405, { error: `Method not allowed. Use ${method}.` })
 }
+
+/**
+ * Pipe a Web ReadableStream to a Node ServerResponse (for streaming SSE/chat).
+ */
+export async function pipeStreamToResponse(
+  res: ServerResponse,
+  stream: ReadableStream<Uint8Array>,
+  headers: Record<string, string>,
+  statusCode = 200
+): Promise<void> {
+  res.statusCode = statusCode
+  for (const [key, value] of Object.entries(headers)) {
+    res.setHeader(key, value)
+  }
+  const reader = stream.getReader()
+  try {
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      res.write(Buffer.from(value))
+    }
+  } finally {
+    reader.releaseLock()
+  }
+  res.end()
+}

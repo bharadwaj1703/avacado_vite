@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Home, Coins, Trophy, User } from 'lucide-react'
+import { Home, Coins, MessageCircle, User } from 'lucide-react'
 
 export function BottomTabBar() {
   return (
@@ -22,12 +22,12 @@ export function BottomTabBar() {
           <span className="text-xs font-medium">Rewards</span>
         </Link>
         <Link
-          to="/leaderboard"
+          to="/chat"
           className="flex flex-col items-center gap-0.5 px-3 py-2 text-muted-foreground transition-colors [&.active]:text-primary"
           activeProps={{ className: 'active text-primary' }}
         >
-          <Trophy className="size-5" />
-          <span className="text-xs font-medium">Leaderboard</span>
+          <MessageCircle className="size-5" />
+          <span className="text-xs font-medium">AI Chat</span>
         </Link>
         <Link
           to="/profile"

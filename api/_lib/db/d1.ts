@@ -49,6 +49,9 @@ export async function createD1Db(env: AppEnv) {
       const rows = await query<T>(sql, params)
       return rows[0] ?? null
     },
+    getMany: async <T>(sql: string, params: unknown[] = []) => {
+      return query<T>(sql, params)
+    },
     run: async (sql: string, params: unknown[] = []) => {
       await query(sql, params)
     },

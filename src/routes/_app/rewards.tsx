@@ -153,15 +153,28 @@ function RewardsPage() {
   const visibleCards = cardOrder.slice(0, 4)
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col items-center px-4 py-4">
-      <div className="mb-6 w-full space-y-1">
-        <h1 className="text-2xl font-bold">{rewards.title}</h1>
-        {rewards.description ? (
-          <p className="text-sm text-muted-foreground">{rewards.description}</p>
-        ) : null}
-      </div>
+    <div className="mx-auto flex flex-1 w-full max-w-2xl flex-col items-center justify-start px-5 py-6 md:justify-center">
+      <div className="relative aspect-[9/16] w-full max-w-sm overflow-visible">
+        {/* Blurred glow of top card image */}
+        {cardOrder.length > 0 && (
+          <div
+            key={`glow-${rewards.items[cardOrder[0]].id}`}
+            className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[200%] w-[200%] -translate-x-1/2 -translate-y-1/2 opacity-0"
+            style={{
+              animation: 'glow-fade-in 600ms ease-out forwards',
+              maskImage: 'radial-gradient(ellipse at center, black 30%, transparent 70%)',
+              WebkitMaskImage: 'radial-gradient(ellipse at center, black 30%, transparent 70%)',
+            }}
+          >
+            <img
+              src={rewards.items[cardOrder[0]].thumbnail}
+              alt=""
+              className="h-full w-full object-cover blur-[120px] saturate-150"
+              draggable={false}
+            />
+          </div>
+        )}
 
-      <div className="relative aspect-[9/16] w-full max-w-sm">
         {visibleCards
           .slice()
           .reverse()

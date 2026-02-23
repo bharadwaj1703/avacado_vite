@@ -20,8 +20,10 @@ import { Route as AppProfileRouteImport } from './routes/_app/profile'
 import { Route as AppMeRouteImport } from './routes/_app/me'
 import { Route as AppLeaderboardRouteImport } from './routes/_app/leaderboard'
 import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppChatRouteImport } from './routes/_app/chat'
 import { Route as AppLearnIndexRouteImport } from './routes/_app/learn/index'
 import { Route as AppQuizQuizIdRouteImport } from './routes/_app/quiz.$quizId'
+import { Route as AppChatChatIdRouteImport } from './routes/_app/chat.$chatId'
 import { Route as AppLearnMilestoneIdIndexRouteImport } from './routes/_app/learn/$milestoneId/index'
 import { Route as LessonMilestoneIdLevelIdLessonIdRouteImport } from './routes/lesson.$milestoneId.$levelId.$lessonId'
 import { Route as AppLearnMilestoneIdLevelIdRouteImport } from './routes/_app/learn/$milestoneId/$levelId'
@@ -80,6 +82,11 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppChatRoute = AppChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppLearnIndexRoute = AppLearnIndexRouteImport.update({
   id: '/learn/',
   path: '/learn/',
@@ -89,6 +96,11 @@ const AppQuizQuizIdRoute = AppQuizQuizIdRouteImport.update({
   id: '/quiz/$quizId',
   path: '/quiz/$quizId',
   getParentRoute: () => AppRoute,
+} as any)
+const AppChatChatIdRoute = AppChatChatIdRouteImport.update({
+  id: '/$chatId',
+  path: '/$chatId',
+  getParentRoute: () => AppChatRoute,
 } as any)
 const AppLearnMilestoneIdIndexRoute =
   AppLearnMilestoneIdIndexRouteImport.update({
@@ -115,11 +127,13 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof OnboardingRoute
   '/signup': typeof SignupRoute
   '/splash': typeof SplashRoute
+  '/chat': typeof AppChatRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/leaderboard': typeof AppLeaderboardRoute
   '/me': typeof AppMeRoute
   '/profile': typeof AppProfileRoute
   '/rewards': typeof AppRewardsRoute
+  '/chat/$chatId': typeof AppChatChatIdRoute
   '/quiz/$quizId': typeof AppQuizQuizIdRoute
   '/learn/': typeof AppLearnIndexRoute
   '/learn/$milestoneId/$levelId': typeof AppLearnMilestoneIdLevelIdRoute
@@ -132,11 +146,13 @@ export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRoute
   '/signup': typeof SignupRoute
   '/splash': typeof SplashRoute
+  '/chat': typeof AppChatRouteWithChildren
   '/dashboard': typeof AppDashboardRoute
   '/leaderboard': typeof AppLeaderboardRoute
   '/me': typeof AppMeRoute
   '/profile': typeof AppProfileRoute
   '/rewards': typeof AppRewardsRoute
+  '/chat/$chatId': typeof AppChatChatIdRoute
   '/quiz/$quizId': typeof AppQuizQuizIdRoute
   '/learn': typeof AppLearnIndexRoute
   '/learn/$milestoneId/$levelId': typeof AppLearnMilestoneIdLevelIdRoute
@@ -151,11 +167,13 @@ export interface FileRoutesById {
   '/onboarding': typeof OnboardingRoute
   '/signup': typeof SignupRoute
   '/splash': typeof SplashRoute
+  '/_app/chat': typeof AppChatRouteWithChildren
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/leaderboard': typeof AppLeaderboardRoute
   '/_app/me': typeof AppMeRoute
   '/_app/profile': typeof AppProfileRoute
   '/_app/rewards': typeof AppRewardsRoute
+  '/_app/chat/$chatId': typeof AppChatChatIdRoute
   '/_app/quiz/$quizId': typeof AppQuizQuizIdRoute
   '/_app/learn/': typeof AppLearnIndexRoute
   '/_app/learn/$milestoneId/$levelId': typeof AppLearnMilestoneIdLevelIdRoute
@@ -170,11 +188,13 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/signup'
     | '/splash'
+    | '/chat'
     | '/dashboard'
     | '/leaderboard'
     | '/me'
     | '/profile'
     | '/rewards'
+    | '/chat/$chatId'
     | '/quiz/$quizId'
     | '/learn/'
     | '/learn/$milestoneId/$levelId'
@@ -187,11 +207,13 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/signup'
     | '/splash'
+    | '/chat'
     | '/dashboard'
     | '/leaderboard'
     | '/me'
     | '/profile'
     | '/rewards'
+    | '/chat/$chatId'
     | '/quiz/$quizId'
     | '/learn'
     | '/learn/$milestoneId/$levelId'
@@ -205,11 +227,13 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/signup'
     | '/splash'
+    | '/_app/chat'
     | '/_app/dashboard'
     | '/_app/leaderboard'
     | '/_app/me'
     | '/_app/profile'
     | '/_app/rewards'
+    | '/_app/chat/$chatId'
     | '/_app/quiz/$quizId'
     | '/_app/learn/'
     | '/_app/learn/$milestoneId/$levelId'
@@ -306,6 +330,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDashboardRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/chat': {
+      id: '/_app/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof AppChatRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/learn/': {
       id: '/_app/learn/'
       path: '/learn'
@@ -319,6 +350,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/quiz/$quizId'
       preLoaderRoute: typeof AppQuizQuizIdRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/_app/chat/$chatId': {
+      id: '/_app/chat/$chatId'
+      path: '/$chatId'
+      fullPath: '/chat/$chatId'
+      preLoaderRoute: typeof AppChatChatIdRouteImport
+      parentRoute: typeof AppChatRoute
     }
     '/_app/learn/$milestoneId/': {
       id: '/_app/learn/$milestoneId/'
@@ -344,7 +382,19 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AppChatRouteChildren {
+  AppChatChatIdRoute: typeof AppChatChatIdRoute
+}
+
+const AppChatRouteChildren: AppChatRouteChildren = {
+  AppChatChatIdRoute: AppChatChatIdRoute,
+}
+
+const AppChatRouteWithChildren =
+  AppChatRoute._addFileChildren(AppChatRouteChildren)
+
 interface AppRouteChildren {
+  AppChatRoute: typeof AppChatRouteWithChildren
   AppDashboardRoute: typeof AppDashboardRoute
   AppLeaderboardRoute: typeof AppLeaderboardRoute
   AppMeRoute: typeof AppMeRoute
@@ -357,6 +407,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppChatRoute: AppChatRouteWithChildren,
   AppDashboardRoute: AppDashboardRoute,
   AppLeaderboardRoute: AppLeaderboardRoute,
   AppMeRoute: AppMeRoute,

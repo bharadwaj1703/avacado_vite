@@ -50,8 +50,6 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     }
 
     const db = await getDb()
-    await db.migrate()
-
     await db.upsertUserFromClerk({
       clerkUserId,
       displayName: extractDisplayName(event),

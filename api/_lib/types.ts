@@ -54,3 +54,31 @@ export type RecordActivityInput = {
   slug: string
   entity: ActivityEntity
 }
+
+export type ChatStatus =
+  | 'awaiting_user'
+  | 'awaiting_llm'
+  | 'streaming'
+  | 'errored'
+  | 'ready'
+
+export type MessageRole = 'system' | 'developer' | 'user' | 'assistant' | 'tool'
+
+export type ChatRow = {
+  id: string
+  user_id: string
+  title: string | null
+  status: ChatStatus
+  created_at: string
+  updated_at: string
+}
+
+export type MessageRow = {
+  id: string
+  chat_id: string
+  role: MessageRole
+  content: string
+  usage: string | null
+  stop_reason: string | null
+  created_at: string
+}

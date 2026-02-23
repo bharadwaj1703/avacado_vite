@@ -20,8 +20,6 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     }
 
     const db = await getDb()
-    await db.migrate()
-
     const result = await db.updateOnboarding({ clerkUserId, input })
     sendJson(res, 200, result)
   } catch (error) {

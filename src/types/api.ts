@@ -41,3 +41,40 @@ export type RecordActivityInput = {
 export type RecordActivityResponse = {
   activityId: string | null
 }
+
+export type ChatStatus =
+  | 'awaiting_user'
+  | 'awaiting_llm'
+  | 'streaming'
+  | 'errored'
+  | 'ready'
+
+export type ChatRow = {
+  id: string
+  user_id: string
+  title: string | null
+  status: ChatStatus
+  created_at: string
+  updated_at: string
+}
+
+export type MessageRow = {
+  id: string
+  chat_id: string
+  role: string
+  content: string
+  usage: string | null
+  stop_reason: string | null
+  created_at: string
+}
+
+export type ChatModelsResponse = {
+  data: Array<{ id: string; name: string; pricing?: Record<string, string>; context_length?: number | null }>
+}
+
+export type ChatCreateResponse = ChatRow
+
+export type ChatGetResponse = {
+  chat: ChatRow
+  messages: MessageRow[]
+}

@@ -2,6 +2,7 @@ import { useReducer, useRef, useCallback, useEffect } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import type { Lesson, AssessmentResult, ContentManifest } from '@/types/content'
 import { useScreens, useQuestions, useQuizConfig } from '@/hooks/useContentManifest'
+import { useTtsManifest } from '@/hooks/useTtsManifest'
 import { ScreenPlayer } from './ScreenPlayer'
 import { QuizRunner } from './QuizRunner'
 import { LessonComplete } from './LessonComplete'
@@ -104,10 +105,12 @@ export function LessonPlayer({
   const screens = useScreens(milestoneId, levelId, lesson.id)
   const questions = useQuestions(milestoneId, levelId, lesson.id)
   const quizConfig = useQuizConfig(milestoneId, levelId, lesson.id)
+  const { data: ttsManifest } = useTtsManifest()
 
   const containerRef = useRef<HTMLDivElement>(null)
   const touchStartRef = useRef<{ y: number; time: number } | null>(null)
-  const progressBarRef = useRef<HTMLDivElement>(null)
+  const progressCircleRef = useRef<SVGCircleElement>(null)
+  const counterRef = useRef<HTMLSpanElement>(null)
   const wheelCooldownRef = useRef(false)
   const [state, dispatch] = useReducer(lessonReducer, {
     phase: 'screens',
@@ -129,27 +132,41 @@ export function LessonPlayer({
 
   const hasQuiz = questions.length > 0 && quizConfig
 
-  // Animation for screen transitions
+  // Animation for screen transitions (bottom-to-top / top-to-bottom)
   const animateTransition = useCallback((direction: 'next' | 'prev') => {
     if (!containerRef.current) return
 
-    const xOffset = direction === 'next' ? -50 : 50
+    const yOffset = direction === 'next' ? 40 : -40
 
     animate(containerRef.current, {
-      translateX: [xOffset, 0],
-      opacity: [0.5, 1],
+      translateY: [yOffset, 0],
+      opacity: [0, 1],
       duration: 300,
       ease: 'outQuad',
     })
   }, [])
 
-  // Animate progress bar
-  const animateProgressBar = useCallback((targetPercent: number) => {
-    if (!progressBarRef.current) return
+  // Animate circular progress + counter
+  const CIRCLE_RADIUS = 16
+  const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS
 
-    animate(progressBarRef.current, {
-      width: `${targetPercent}%`,
-      duration: 300,
+  const animateProgressBar = useCallback((targetPercent: number) => {
+    if (!progressCircleRef.current) return
+    const targetOffset = CIRCLE_CIRCUMFERENCE * (1 - targetPercent / 100)
+    animate(progressCircleRef.current, {
+      strokeDashoffset: targetOffset,
+      duration: 400,
+      ease: 'outQuad',
+    })
+  }, [CIRCLE_CIRCUMFERENCE])
+
+  const animateCounter = useCallback((direction: 'next' | 'prev') => {
+    if (!counterRef.current) return
+    const yFrom = direction === 'next' ? -12 : 12
+    animate(counterRef.current, {
+      translateY: [yFrom, 0],
+      opacity: [0, 1],
+      duration: 250,
       ease: 'outQuad',
     })
   }, [])
@@ -169,6 +186,7 @@ export function LessonPlayer({
     if (checkpointQuestion) {
       // Show checkpoint as separate step
       animateTransition('next')
+      animateCounter('next')
       dispatch({ type: 'SHOW_CHECKPOINT' })
       return
     }
@@ -176,6 +194,7 @@ export function LessonPlayer({
     // No checkpoint — advance to next screen, quiz, or finish
     if (state.currentScreenIndex < screens.length - 1) {
       animateTransition('next')
+      animateCounter('next')
       dispatch({ type: 'NEXT_SCREEN' })
       const totalSteps = screens.length + (hasQuiz ? 1 : 0)
       animateProgressBar(((state.currentScreenIndex + 1) / totalSteps) * 100)
@@ -200,6 +219,7 @@ export function LessonPlayer({
     manifest.questions,
     markScreenComplete,
     animateTransition,
+    animateCounter,
     animateProgressBar,
     navigate,
     recordLessonResult,
@@ -212,6 +232,7 @@ export function LessonPlayer({
 
     if (state.currentScreenIndex < screens.length - 1) {
       animateTransition('next')
+      animateCounter('next')
       dispatch({ type: 'NEXT_SCREEN' })
       const totalSteps = screens.length + (hasQuiz ? 1 : 0)
       animateProgressBar(((state.currentScreenIndex + 1) / totalSteps) * 100)
@@ -234,6 +255,7 @@ export function LessonPlayer({
     lesson.id,
     lessonSlug,
     animateTransition,
+    animateCounter,
     animateProgressBar,
     navigate,
     recordLessonResult,
@@ -244,16 +266,18 @@ export function LessonPlayer({
     if (state.phase === 'checkpoint') {
       // Go back from checkpoint to the screen
       animateTransition('prev')
+      animateCounter('prev')
       dispatch({ type: 'CHECKPOINT_PASSED' }) // reset to screens phase
       return
     }
     if (state.currentScreenIndex > 0) {
       animateTransition('prev')
+      animateCounter('prev')
       dispatch({ type: 'PREV_SCREEN' })
       const totalSteps = screens.length + (hasQuiz ? 1 : 0)
       animateProgressBar(((state.currentScreenIndex - 1) / totalSteps) * 100)
     }
-  }, [state.phase, state.currentScreenIndex, animateTransition, animateProgressBar, screens.length, hasQuiz])
+  }, [state.phase, state.currentScreenIndex, animateTransition, animateCounter, animateProgressBar, screens.length, hasQuiz])
 
   const handleQuizComplete = useCallback(
     (result: AssessmentResult) => {
@@ -391,12 +415,17 @@ export function LessonPlayer({
           )
         }
 
+        // Use content manifest screen key (path-based), not screen.id — TTS manifest uses same key as generate-tts (from file path)
+        const screenKey = lesson.screen_refs[state.currentScreenIndex]
+        const ttsUrl = (screenKey && ttsManifest?.[screenKey]) ?? null
+
         return (
           <ScreenPlayer
-            key={currentScreen.id}
+            key={screenKey ?? currentScreen.id}
             screen={currentScreen}
             onComplete={advanceFromScreen}
             onMascotCta={handleMascotCta}
+            ttsUrl={ttsUrl}
           />
         )
       }
@@ -498,22 +527,40 @@ export function LessonPlayer({
           {lesson.title}
         </h1>
 
-        {/* Right: Progress circle */}
-        <div className="flex size-10 items-center justify-center rounded-full border-2 border-muted">
-          <span className="text-xs font-medium text-muted-foreground">
+        {/* Right: Circular progress with counter */}
+        <div className="relative flex size-10 items-center justify-center">
+          <svg className="absolute inset-0 -rotate-90" viewBox="0 0 40 40">
+            <circle
+              cx="20"
+              cy="20"
+              r={CIRCLE_RADIUS}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              className="text-muted"
+            />
+            <circle
+              ref={progressCircleRef}
+              cx="20"
+              cy="20"
+              r={CIRCLE_RADIUS}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              className="text-primary"
+              strokeDasharray={CIRCLE_CIRCUMFERENCE}
+              strokeDashoffset={CIRCLE_CIRCUMFERENCE * (1 - progressPercent / 100)}
+            />
+          </svg>
+          <span
+            ref={counterRef}
+            className="relative text-[10px] font-semibold text-muted-foreground"
+          >
             {completedScreens}/{screens.length}
           </span>
         </div>
       </header>
-
-      {/* Progress Bar */}
-      <div className="mx-auto h-1 w-full max-w-2xl bg-muted">
-        <div
-          ref={progressBarRef}
-          className="h-full bg-primary"
-          style={{ width: `${progressPercent}%` }}
-        />
-      </div>
 
       {/* Content */}
       <main className="mx-auto w-full max-w-2xl flex-1 overflow-hidden p-4">

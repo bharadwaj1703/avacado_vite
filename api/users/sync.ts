@@ -19,8 +19,6 @@ export default async function handler(req: IncomingMessage & { body?: unknown },
     const body = await readBodyJson<SyncBody>(req)
 
     const db = await getDb()
-    await db.migrate()
-
     const userId = await db.upsertUserFromClerk({
       clerkUserId,
       leadId: body.leadId,

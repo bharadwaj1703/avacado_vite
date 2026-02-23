@@ -9,6 +9,8 @@ An education focused app for learning AI and tech concepts
 - Space Grotesk if changing design styles do check space-grotesk-typography skill
 - Use tailwind v4, avoid inline style="" tags and use tailwind classes or consider adding a reusable class
 - anime.js, avoid adding any other animation library - instead leverage existing
+- We use sqlite on local and turso in production
+- We use clerk for auth, ensure all routes are protected, unless you are explicitly asked to make a public route 
  
 
 ## Coding Style
@@ -23,3 +25,4 @@ An education focused app for learning AI and tech concepts
 - Mention in the plan what exactly will you change where and downstream changes required (avoid backward compatability), list breaking downstream changes to be changed as todo items/part of the plan
 - On approval, use or create sub-agents (if available) to execute the changes - make sure you give specific instructions. You are likely to have access to "kimi" as a cli agent as well
 - After the changes, see if a tool can allow you to verify your changes (browser access for design/frontend changes) and/or cli commands for bacend changes. Verify your changes for correctness, and ensure no bugs before claiming that a request is done/finished
+- DO NOT UNDER ANY CURCUMSTANCES read/write/peak/print .env.* files THEY ARE STRICTLY OFF LIMITS NO EXCEPTIONS

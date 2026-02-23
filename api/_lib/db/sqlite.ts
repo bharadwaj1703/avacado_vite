@@ -6,6 +6,7 @@ import { MIGRATIONS } from './migrations'
 type BunQuery = {
   run: (...params: unknown[]) => unknown
   get: (...params: unknown[]) => unknown
+  all: (...params: unknown[]) => unknown[]
 }
 
 type BunDatabase = {
@@ -28,6 +29,10 @@ export async function createSqliteDb(env: AppEnv) {
     getOne: async <T>(sql: string, params: unknown[] = []) => {
       const row = db.query(sql).get(...params)
       return (row ?? null) as T | null
+    },
+    getMany: async <T>(sql: string, params: unknown[] = []) => {
+      const rows = db.query(sql).all(...params)
+      return (rows ?? []) as T[]
     },
     run: async (sql: string, params: unknown[] = []) => {
       db.query(sql).run(...params)

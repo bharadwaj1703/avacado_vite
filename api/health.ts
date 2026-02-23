@@ -10,7 +10,6 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
   try {
     const db = await getDb()
-    await db.migrate()
     const health = await db.health()
     sendJson(res, 200, health)
   } catch (error) {
