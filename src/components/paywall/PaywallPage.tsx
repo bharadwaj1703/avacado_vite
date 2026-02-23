@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { useNavigate } from '@tanstack/react-router'
+
 import { useQueryClient } from '@tanstack/react-query'
 import { animate } from 'animejs'
 import { Button } from '@/components/ui/button'
@@ -124,7 +124,6 @@ function CouponCard({ onClick }: { onClick: () => void }) {
 }
 
 export function PaywallPage() {
-  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [selectedPlan, setSelectedPlan] = useState<PricingPlan>('yearly')
   const [drawerOpen, setDrawerOpen] = useState(false)

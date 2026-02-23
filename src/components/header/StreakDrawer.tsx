@@ -32,7 +32,7 @@ export function StreakDrawer({ open, onOpenChange }: StreakDrawerProps) {
       animate(circles, {
         scale: [0, 1],
         duration: 400,
-        delay: (_el: Element, i: number) => i * 80,
+        delay: (_el, i: number) => i * 80,
         ease: 'outBack',
       })
     }

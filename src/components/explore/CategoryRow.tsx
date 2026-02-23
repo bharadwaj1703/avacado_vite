@@ -21,7 +21,7 @@ export function CategoryRow() {
         scale: [0, 1],
         opacity: [0, 1],
         duration: 400,
-        delay: (_el: Element, i: number) => i * 50,
+        delay: (_el, i: number) => i * 50,
         ease: 'outBack',
       })
     }
