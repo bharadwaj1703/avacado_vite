@@ -147,7 +147,7 @@ export function PaywallPage() {
         y: [30, 0],
         opacity: [0, 1],
         duration: 600,
-        delay: (_el: Element, i: number) => i * 100,
+        delay: (_el, i: number) => i * 100,
         ease: 'outExpo',
       })
     }

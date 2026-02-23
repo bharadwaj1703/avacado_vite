@@ -191,7 +191,7 @@ function CelebrationView({ onStartLearning }: { onStartLearning: () => void }) {
         y: [20, 0],
         opacity: [0, 1],
         duration: 500,
-        delay: (_el: Element, i: number) => 300 + i * 120,
+        delay: (_el, i: number) => 300 + i * 120,
         ease: 'outExpo',
       })
       const cta = el.querySelector('.celebrate-cta')
@@ -312,7 +312,7 @@ export function CouponDrawer({
           scale: [0, 1],
           opacity: [0, 0.6],
           duration: 600,
-          delay: (_el: Element, i: number) => i * 80,
+          delay: (_el, i: number) => i * 80,
           ease: 'outBack',
         })
       }
