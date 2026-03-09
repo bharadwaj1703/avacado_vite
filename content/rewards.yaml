@@ -1,0 +1,28 @@
+version: "1.0.0"
+title: "Rewards"
+description: "Redeem your coins for premium resources."
+items:
+  - id: "ai-assistant"
+    title: "AI Assistant Playbook"
+    thumbnail: "/content/tumbnails/resources/ai-assistnat.png"
+    price_coins: 55000
+  - id: "ai-origin"
+    title: "AI Origin Story"
+    thumbnail: "/content/tumbnails/resources/ai-origin.png"
+    price_coins: 32000
+  - id: "apps-blueprint"
+    title: "AI Apps Blueprint"
+    thumbnail: "/content/tumbnails/resources/apps.jpg"
+    price_coins: 48000
+  - id: "data-starter"
+    title: "Data Fundamentals Kit"
+    thumbnail: "/content/tumbnails/resources/data.jpg"
+    price_coins: 27500
+  - id: "influencer-secrets"
+    title: "Influencer Secrets"
+    thumbnail: "/content/tumbnails/resources/influencer_secrets.png"
+    price_coins: 65000
+  - id: "interview-master"
+    title: "Master Interview"
+    thumbnail: "/content/tumbnails/resources/master-interview.png"
+    price_coins: 70000

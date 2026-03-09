@@ -1,0 +1,7 @@
+id: "02-ai-for-work"
+title: "AI for Work"
+description: "Most people believe AI can write a poem, an email, and maybe a bad poem. But did you know it can automate more than half of your work?"
+order: 2
+lesson_refs:
+  - lessons/01-ai-takes-action/lesson.yaml
+thumbnail: "/content/images/level-intro-ai.svg"

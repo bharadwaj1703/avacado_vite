@@ -1,0 +1,6 @@
+version: "1.0.0"
+title: "Unlock the Magic"
+description: "What is even AI? And what can it do for you?"
+last_updated: "2026-02-21T00:00:00Z"
+milestone_refs:
+  - milestones/01-ai-foundations/milestone.yaml

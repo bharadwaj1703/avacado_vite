@@ -1,0 +1,21 @@
+id: "01-what-is-ai"
+title: "What is AI?"
+description: "What is AI and how does it work? What can it do for me?"
+order: 1
+screen_refs:
+  - screens/01-not-new.yaml
+  - screens/02-narrow-vs-general.yaml
+  - screens/03-ready-for-ai.yaml
+quiz:
+  question_refs:
+    - questions/q01-define-ai.yaml
+    - questions/q02-narrow-vs-general.yaml
+    - questions/q03-ai-examples.yaml
+  minimum_passing_score: 0.67
+  allow_retry: true
+  show_answers_after: true
+estimated_duration_minutes: 15
+tags:
+  - fundamentals
+  - ai-basics
+  - introduction

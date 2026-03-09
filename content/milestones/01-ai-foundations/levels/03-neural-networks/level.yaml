@@ -1,0 +1,7 @@
+id: "03-neural-networks"
+title: "Neural Networks"
+description: "Peek inside the brain-inspired architecture powering modern AI."
+order: 3
+lesson_refs:
+  - lessons/01-intro-to-nn/lesson.yaml
+thumbnail: "/content/images/level-neural-nets.svg"
