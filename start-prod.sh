@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Always run from repo root (directory containing this script)
+cd "$(dirname "$0")" || exit 1
+
 # Colors for output
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -9,6 +12,11 @@ NC='\033[0m' # No Color
 
 echo -e "${GREEN}Starting Avacado Production Environment${NC}"
 echo -e "${BLUE}=========================================${NC}"
+
+# Increase Node/Bun heap limit to avoid "JavaScript heap out of memory" during build/start
+if [[ "$NODE_OPTIONS" != *"max-old-space-size"* ]]; then
+  export NODE_OPTIONS="${NODE_OPTIONS:+$NODE_OPTIONS }--max-old-space-size=4096"
+fi
 
 # Check if we're in production mode
 if [ "$NODE_ENV" != "production" ]; then
