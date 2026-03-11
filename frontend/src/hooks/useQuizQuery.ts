@@ -10,6 +10,8 @@ export function useQuizQuery(quizId: string) {
       if (!quiz) throw new Error(`Quiz "${quizId}" not found`)
       return quiz
     },
+    staleTime: Infinity, // Static data, never goes stale
+    gcTime: Infinity, // Keep in cache forever
   })
 }
 
@@ -17,5 +19,7 @@ export function useLessonsQuery() {
   return useQuery({
     queryKey: ['lessons'],
     queryFn: () => ({ units: sampleUnits, streakCount }),
+    staleTime: Infinity, // Static data, never goes stale
+    gcTime: Infinity, // Keep in cache forever
   })
 }

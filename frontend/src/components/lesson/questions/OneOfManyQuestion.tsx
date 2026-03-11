@@ -64,6 +64,7 @@ export const OneOfManyQuestionComponent = memo(function OneOfManyQuestionCompone
                   key={option.id}
                   onClick={() => !submitted && setSelected(option.id)}
                   disabled={submitted}
+                  aria-label={`Select option: ${option.text}`}
                   className={`flex flex-col items-start gap-2 rounded-xl border-2 p-4 text-left transition-all ${
                     isSelected
                       ? 'border-primary bg-primary/5'
@@ -99,6 +100,7 @@ export const OneOfManyQuestionComponent = memo(function OneOfManyQuestionCompone
                   key={option.id}
                   onClick={() => !submitted && setSelected(option.id)}
                   disabled={submitted}
+                  aria-label={`Select option: ${option.text}`}
                   className={`min-h-12 rounded-xl border-2 p-3 text-sm font-medium transition-all ${
                     isSelected
                       ? 'border-primary bg-primary/5'
@@ -184,7 +186,7 @@ export const OneOfManyQuestionComponent = memo(function OneOfManyQuestionCompone
         {renderOptions()}
 
         {!submitted && (
-          <Button onClick={handleSubmit} disabled={!selected}>
+          <Button onClick={handleSubmit} disabled={!selected} aria-label="Submit answer">
             Check Answer
           </Button>
         )}

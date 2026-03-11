@@ -65,7 +65,7 @@ export const TextEntryQuestionComponent = memo(function TextEntryQuestionCompone
         />
 
         {!submitted && (
-          <Button onClick={handleSubmit} disabled={!answer.trim()}>
+          <Button onClick={handleSubmit} disabled={!answer.trim()} aria-label="Submit answer">
             Check Answer
           </Button>
         )}

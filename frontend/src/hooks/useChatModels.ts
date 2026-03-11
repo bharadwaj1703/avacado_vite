@@ -14,5 +14,7 @@ export function useChatModels() {
         tokenProvider: () => getToken(),
       }),
     enabled: isSignedIn ?? false,
+    staleTime: 30 * 60 * 1000, // 30 minutes - models rarely change
+    gcTime: 60 * 60 * 1000, // 1 hour - keep in cache for 1 hour
   })
 }

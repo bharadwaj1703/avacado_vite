@@ -105,7 +105,7 @@ const ChatCard = memo(function ChatCard({
 
   return (
     <div className="group relative overflow-hidden rounded-xl">
-      <div className="absolute inset-y-0 right-0 flex w-[76px] items-center justify-center sm:hidden">
+      <div className="absolute inset-y-0 right-0 flex w-19 items-center justify-center sm:hidden">
         <Button
           type="button"
           size="icon"

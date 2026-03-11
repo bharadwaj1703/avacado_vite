@@ -14,5 +14,7 @@ export function useChatQuery(chatId: string | undefined) {
         tokenProvider: () => getToken(),
       }),
     enabled: Boolean(isSignedIn && chatId),
+    staleTime: 2 * 60 * 1000, // 2 minutes - chat data stays fresh for 2 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes - keep in cache for 10 minutes
   })
 }

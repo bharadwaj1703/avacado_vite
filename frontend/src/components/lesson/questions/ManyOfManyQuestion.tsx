@@ -70,6 +70,7 @@ export const ManyOfManyQuestionComponent = memo(function ManyOfManyQuestionCompo
                   key={option.id}
                   onClick={() => toggleOption(option.id)}
                   disabled={submitted}
+                  aria-label={`Select option: ${option.text}`}
                   className={`flex flex-col items-start gap-2 rounded-xl border-2 p-4 text-left transition-all ${
                     isSelected
                       ? 'border-primary bg-primary/5'
@@ -128,6 +129,7 @@ export const ManyOfManyQuestionComponent = memo(function ManyOfManyQuestionCompo
                   key={option.id}
                   onClick={() => toggleOption(option.id)}
                   disabled={submitted}
+                  aria-label={`Select option: ${option.text}`}
                   className={`flex w-full items-center gap-3 rounded-xl border-2 p-4 transition-all ${
                     isSelected
                       ? 'border-primary bg-primary/5'
@@ -210,7 +212,7 @@ export const ManyOfManyQuestionComponent = memo(function ManyOfManyQuestionCompo
         {renderOptions()}
 
         {!submitted && (
-          <Button onClick={handleSubmit} disabled={selected.length === 0}>
+          <Button onClick={handleSubmit} disabled={selected.length === 0} aria-label="Submit answer">
             Check Answer
           </Button>
         )}
