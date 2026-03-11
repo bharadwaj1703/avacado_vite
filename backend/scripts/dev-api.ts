@@ -2,7 +2,7 @@
  * Local API dev server — runs all api/ handlers on Bun's HTTP server.
  * Vite proxies /api/* here so `bun run dev` serves both frontend and API.
  */
-import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
+import { createServer } from 'node:http'
 import { resolve } from 'node:path'
 import { readFileSync, existsSync } from 'node:fs'
 
@@ -22,47 +22,16 @@ if (existsSync(envPath)) {
   }
 }
 
-import healthHandler from '../src/health'
-import meHandler from '../src/users/me'
-import syncHandler from '../src/users/sync'
-import onboardingHandler from '../src/users/onboarding'
-import activitiesHandler from '../src/activities'
-import clerkWebhookHandler from '../src/webhooks/clerk'
-import chatsHandler from '../src/chats/index'
-import chatIdHandler from '../src/chats/[id]'
-import chatHandler from '../src/chat/index'
-import chatModelsHandler from '../src/chat/models'
-
-type Handler = (req: IncomingMessage & { body?: unknown }, res: ServerResponse) => void | Promise<void>
-
-const routes: [string, Handler][] = [
-  ['/api/health', healthHandler],
-  ['/api/users/me', meHandler],
-  ['/api/users/sync', syncHandler],
-  ['/api/users/onboarding', onboardingHandler],
-  ['/api/activities', activitiesHandler],
-  ['/api/webhooks/clerk', clerkWebhookHandler],
-  ['/api/chat/models', chatModelsHandler],
-  ['/api/chat', chatHandler],
-  ['/api/chats', chatsHandler],
-]
-
-function matchRoute(pathname: string): Handler | null {
-  for (const [pattern, handler] of routes) {
-    if (pathname === pattern || pathname === `${pattern}/`) return handler
-  }
-  // /api/chats/:id
-  if (pathname.startsWith('/api/chats/') && pathname.split('/').filter(Boolean).length === 3) {
-    return chatIdHandler
-  }
-  return null
-}
+import { matchRoute } from '../src/routes/index.js'
+import chatHandler from '../src/chat/index.js'
 
 const PORT = Number(process.env.API_DEV_PORT) || 3001
 
 const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', `http://localhost:${PORT}`)
-  const handler = matchRoute(url.pathname)
+  
+  // Special handling for /api/chat (streaming endpoint)
+  let handler = url.pathname === '/api/chat' ? chatHandler : matchRoute(url.pathname)
 
   // Get the origin from the request, default to localhost:5173 for dev
   const origin = req.headers.origin || 'http://localhost:5173'

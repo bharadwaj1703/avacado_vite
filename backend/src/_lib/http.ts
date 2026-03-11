@@ -1,8 +1,6 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
-type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue }
-
-export function sendJson(res: ServerResponse, statusCode: number, payload: JsonValue | { [key: string]: unknown }) {
+export function sendJson(res: ServerResponse, statusCode: number, payload: unknown) {
   res.statusCode = statusCode
   res.setHeader('Content-Type', 'application/json')
   res.end(JSON.stringify(payload))
