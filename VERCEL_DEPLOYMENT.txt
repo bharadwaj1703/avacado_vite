@@ -1,0 +1,250 @@
+🚀 VERCEL DEPLOYMENT GUIDE
+==========================
+
+Your project is now configured for Vercel deployment!
+
+📋 WHAT'S BEEN CONFIGURED
+-------------------------
+
+1. ✅ vercel.json - Vercel configuration file
+   - Frontend: Serves from frontend/dist
+   - Backend: Serverless functions in /api
+   - Rewrites: All /api/* to serverless functions, /* to SPA
+   - CORS headers configured
+
+2. ✅ api/[...path].ts - Catch-all serverless function
+   - Handles all /api/* routes
+   - Converts Vercel requests to your backend handlers
+   - Supports streaming for chat endpoint
+
+3. ✅ .vercelignore - Excludes unnecessary files from deployment
+
+4. ✅ api/tsconfig.json - TypeScript config for API functions
+
+
+🎯 DEPLOYMENT STEPS
+-------------------
+
+OPTION 1: Deploy via Vercel Dashboard (Recommended)
+====================================================
+
+1. Go to https://vercel.com/new
+
+2. Import your Git repository
+   - Connect GitHub/GitLab/Bitbucket
+   - Select your repository
+
+3. Configure Project:
+   - Framework Preset: Other
+   - Root Directory: ./
+   - Build Command: bun run build
+   - Output Directory: frontend/dist
+   - Install Command: bun install
+
+4. Add Environment Variables:
+   Click "Environment Variables" and add:
+
+   REQUIRED:
+   ---------
+   VITE_CLERK_PUBLISHABLE_KEY=pk_test_xxxxx
+   CLERK_SECRET_KEY=sk_test_xxxxx
+   CLERK_BACKEND_API_URL=https://api.clerk.com
+   OPENROUTER_API_KEY=sk-or-v1-xxxxx
+   DATABASE=turso
+   DATABASE_TURSO_DATABASE_URL=libsql://xxxxx.turso.io
+   DATABASE_TURSO_AUTH_TOKEN=eyJhbGcixxxxx
+
+   OPTIONAL:
+   ---------
+   GEMINI_API_KEY=AIzaSyxxxxx
+   OPENAI_API_KEY=sk-proj-xxxxx
+   ELEVENLABS_API_KEY=sk_xxxxx
+   AI_MODEL_MAX_INPUT_PRICE_PER_MTOK=1.00
+   AI_MODEL_MAX_OUTPUT_PRICE_PER_MTOK=2.5
+   TTS_STORAGE=local
+   TTS_PROVIDER=gemini
+   TTS_VOICE=Fenrir
+   CLOUDFLARE_ACCOUNT_ID=xxxxx
+   CLOUDFLARE_R2_ACCESS_KEY_ID=xxxxx
+   CLOUDFLARE_R2_SECRET_ACCESS_KEY=xxxxx
+   R2_BUCKET_NAME=xxxxx
+   R2_PUBLIC_URL=https://xxxxx
+   ALLOWED_ORIGINS=https://your-domain.vercel.app
+
+5. Click "Deploy"
+   - Wait 5-10 minutes for build
+   - Your app will be live!
+
+
+OPTION 2: Deploy via Vercel CLI
+================================
+
+1. Install Vercel CLI:
+   npm i -g vercel
+
+2. Login to Vercel:
+   vercel login
+
+3. Link your project:
+   vercel link
+
+4. Set environment variables:
+   vercel env add VITE_CLERK_PUBLISHABLE_KEY production
+   vercel env add CLERK_SECRET_KEY production
+   vercel env add OPENROUTER_API_KEY production
+   vercel env add DATABASE production
+   vercel env add DATABASE_TURSO_DATABASE_URL production
+   vercel env add DATABASE_TURSO_AUTH_TOKEN production
+   (repeat for all env vars)
+
+5. Deploy:
+   vercel --prod
+
+
+📊 AFTER DEPLOYMENT
+-------------------
+
+Your app will be available at:
+- Production: https://your-project.vercel.app
+- API: https://your-project.vercel.app/api/*
+- Frontend: https://your-project.vercel.app
+
+1. Run Database Migration:
+   - Can't run directly on Vercel (serverless)
+   - Run locally with production DATABASE env vars:
+     DATABASE=turso \
+     DATABASE_TURSO_DATABASE_URL=libsql://xxxxx.turso.io \
+     DATABASE_TURSO_AUTH_TOKEN=eyJhbGcixxxxx \
+     bun run migrate
+
+2. Update Clerk Settings:
+   - Go to Clerk Dashboard
+   - Add your Vercel URL to allowed origins:
+     https://your-project.vercel.app
+
+3. Test Your Deployment:
+   - Visit https://your-project.vercel.app
+   - Test authentication
+   - Test API endpoints
+   - Test chat functionality
+
+
+🔧 IMPORTANT NOTES
+------------------
+
+1. DATABASE CHOICE:
+   ❌ SQLite - NOT supported on Vercel (no persistent filesystem)
+   ✅ Turso - RECOMMENDED for Vercel (serverless-friendly)
+   
+   You MUST use Turso or another cloud database!
+
+2. FILE STORAGE:
+   - Local TTS storage won't work on Vercel
+   - Use Cloudflare R2 or another cloud storage
+   - Set TTS_STORAGE=r2
+
+3. SERVERLESS LIMITATIONS:
+   - Max execution time: 60 seconds (hobby), 300s (pro)
+   - No persistent filesystem
+   - Cold starts may occur
+   - Stateless functions
+
+4. ENVIRONMENT VARIABLES:
+   - Set in Vercel Dashboard or via CLI
+   - Never commit .env files
+   - Use different values for preview vs production
+
+
+🐛 TROUBLESHOOTING
+------------------
+
+Build Fails:
+- Check build logs in Vercel Dashboard
+- Verify all dependencies in package.json
+- Check Node.js version compatibility
+
+API Not Working:
+- Check serverless function logs
+- Verify environment variables are set
+- Check CORS configuration
+
+Database Errors:
+- Ensure using Turso (not SQLite)
+- Verify DATABASE_TURSO_* env vars
+- Run migrations locally first
+
+Frontend Can't Reach API:
+- Check VITE_API_ORIGIN is not set (same origin)
+- Verify rewrites in vercel.json
+- Check browser console for errors
+
+
+💰 COST ESTIMATE
+----------------
+
+Vercel Hobby (Free):
+- 100GB bandwidth/month
+- Unlimited serverless function invocations
+- 100 hours serverless execution/month
+- Custom domains
+- Total: $0/month
+
+Vercel Pro:
+- 1TB bandwidth/month
+- Unlimited invocations
+- 1000 hours execution/month
+- Team collaboration
+- Total: $20/month
+
+
+🔄 UPDATING DEPLOYMENT
+----------------------
+
+Automatic:
+- Push to main branch
+- Vercel auto-deploys
+
+Manual:
+- vercel --prod
+
+
+📚 ADDITIONAL RESOURCES
+-----------------------
+
+- Vercel Docs: https://vercel.com/docs
+- Vercel CLI: https://vercel.com/docs/cli
+- Serverless Functions: https://vercel.com/docs/functions
+- Environment Variables: https://vercel.com/docs/environment-variables
+
+
+✅ DEPLOYMENT CHECKLIST
+-----------------------
+
+Before deploying:
+[ ] Committed all changes to git
+[ ] Updated environment variables template
+[ ] Tested build locally: bun run build
+[ ] Verified Turso database is set up
+[ ] Got all API keys ready
+
+During deployment:
+[ ] Connected git repository
+[ ] Set all environment variables
+[ ] Configured build settings
+[ ] Deployed successfully
+
+After deployment:
+[ ] Ran database migrations
+[ ] Updated Clerk allowed origins
+[ ] Tested authentication
+[ ] Tested API endpoints
+[ ] Tested chat functionality
+[ ] Verified TTS works (if using)
+
+
+🎉 YOU'RE READY TO DEPLOY!
+---------------------------
+
+Follow the steps above and your app will be live on Vercel in minutes!
+
+Questions? Check Vercel documentation or logs in the dashboard.

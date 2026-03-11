@@ -12,6 +12,7 @@
     "dev:frontend": "cd frontend && bun run dev",
     "dev:backend": "cd backend && bun run dev",
     "build": "NODE_OPTIONS='--max-old-space-size=4096' bun run build:backend && NODE_OPTIONS='--max-old-space-size=4096' bun run build:frontend",
+    "build:vercel": "NODE_OPTIONS='--max-old-space-size=4096' bun run build:backend && NODE_OPTIONS='--max-old-space-size=4096' bun run build:frontend",
     "build:frontend": "cd frontend && NODE_OPTIONS='--max-old-space-size=4096' bun run build",
     "build:backend": "cd backend && NODE_OPTIONS='--max-old-space-size=4096' bun run build",
     "start": "bash ./start-prod.sh",
