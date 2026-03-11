@@ -143,10 +143,10 @@ function markdownToHtml(markdown: string): string {
 
 function messageText(message: UIMessage): string {
   const textParts = message.parts?.filter(
-    (part): part is { type: 'text'; text: string } => part.type === 'text'
+    (part: { type: string; text?: string }): part is { type: 'text'; text: string } => part.type === 'text'
   )
   if (textParts && textParts.length > 0) {
-    return textParts.map((part) => part.text).join('')
+    return textParts.map((part: { type: 'text'; text: string }) => part.text).join('')
   }
   const content = (message as { content?: unknown }).content
   if (typeof content === 'string') {
@@ -208,7 +208,7 @@ export function ChatPanel({
         const token = await getToken()
         return token ? { Authorization: `Bearer ${token}` } : {}
       },
-      prepareSendMessagesRequest: ({ id, messages }) => ({
+      prepareSendMessagesRequest: ({ id, messages }: { id: string; messages: UIMessage[] }) => ({
         body: {
           id,
           message: messages[messages.length - 1],

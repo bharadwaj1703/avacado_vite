@@ -15,6 +15,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Resolve 'ai' from workspace root so build finds it when frontend has no local node_modules/ai
+      ai: path.resolve(__dirname, '../node_modules/ai'),
     },
   },
   root: '.',

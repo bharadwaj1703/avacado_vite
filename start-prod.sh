@@ -35,6 +35,12 @@ cleanup() {
 # Trap CTRL+C and call cleanup
 trap cleanup INT TERM
 
+# Ensure dependencies are installed (so workspace root has node_modules/ai for frontend build)
+if [ ! -d "node_modules/ai" ] && [ ! -d "frontend/node_modules/ai" ]; then
+    echo -e "${BLUE}Installing dependencies...${NC}"
+    (command -v bun >/dev/null 2>&1 && bun install) || npm install
+fi
+
 # Check if backend is built
 if [ ! -d "backend/dist" ]; then
     echo -e "${YELLOW}Backend not built. Building now...${NC}"
