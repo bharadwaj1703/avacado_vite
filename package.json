@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "dependencies": {
-    "ai": "^6.0.97"
+    "ai": "^6.0.97",
+    "start": "^5.1.0"
   },
   "scripts": {
     "dev": "bun run dev:all",
