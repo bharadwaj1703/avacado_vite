@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun run scripts/dev-api.ts",
+    "start": "bun run scripts/start-prod.ts",
     "migrate": "bun run scripts/migrate.ts",
     "build": "tsc -b",
     "lint": "eslint ."
