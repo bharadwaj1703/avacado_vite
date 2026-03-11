@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import type { OneOfManyQuestion } from '@/types/content'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Button } from '@/components/ui/button'
@@ -20,7 +20,7 @@ interface OneOfManyQuestionProps {
   submitted?: boolean
 }
 
-export function OneOfManyQuestionComponent({
+export const OneOfManyQuestionComponent = memo(function OneOfManyQuestionComponent({
   question,
   onSubmit,
   submitted = false,
@@ -193,4 +193,4 @@ export function OneOfManyQuestionComponent({
       {result && <AnswerFeedback result={result} />}
     </div>
   )
-}
+})

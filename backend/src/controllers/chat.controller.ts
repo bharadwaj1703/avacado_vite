@@ -6,6 +6,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import { requireClerkUserId } from '../_lib/auth.js'
 import { methodNotAllowed, sendJson, readBodyJson } from '../_lib/http.js'
+import { getDb } from '../_lib/db/adapter.js'
 import { userService } from '../services/user.service.js'
 import { chatService } from '../services/chat.service.js'
 import type { CreateChatRequest } from '../types/chat.types.js'
@@ -93,7 +94,9 @@ export class ChatController {
 
       if (req.method === 'GET') {
         const chat = await chatService.getChatById(chatId, user.id)
-        sendJson(res, 200, chat)
+        const db = await getDb()
+        const messages = await db.listMessagesByChatId(chatId)
+        sendJson(res, 200, { chat, messages })
         return
       }
 

@@ -78,7 +78,15 @@ export type MessageRow = {
 }
 
 export type ChatModelsResponse = {
-  data: Array<{ id: string; name: string; pricing?: Record<string, string>; context_length?: number | null }>
+  data: Array<{
+    id: string
+    name: string
+    contextLength?: number | null
+    pricing?: {
+      prompt: number
+      completion: number
+    }
+  }>
 }
 
 export type ChatCreateResponse = ChatRow

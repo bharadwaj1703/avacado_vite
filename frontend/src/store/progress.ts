@@ -90,7 +90,6 @@ function parseLessonKey(key: string): { milestoneId: string; levelId: string; le
 function parseRef(ref: string, expectedParts: number): string[] {
   const parts = ref.split('/')
   if (parts.length < expectedParts) {
-    console.warn(`Unexpected ref format: ${ref}`)
     return Array(expectedParts).fill('')
   }
   return parts.slice(-expectedParts)

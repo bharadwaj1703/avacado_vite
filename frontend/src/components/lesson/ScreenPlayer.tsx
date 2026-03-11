@@ -104,8 +104,8 @@ export function ScreenPlayer({
     if (isPlaying) {
       audio.pause()
     } else {
-      audio.play().catch((err: unknown) => {
-        console.error('[TTS] play() failed:', err)
+      audio.play().catch(() => {
+        // Audio play failed, silently handle
       })
     }
   }, [isPlaying, ttsUrl])
@@ -173,9 +173,8 @@ export function ScreenPlayer({
             onPause={handleAudioPause}
             onEnded={handleAudioEnded}
             onLoadedMetadata={tryAutoplay}
-            onError={(e) => {
-              const el = e.currentTarget
-              console.error('[TTS] audio load error:', el.error?.message ?? 'unknown', 'src:', el.src)
+            onError={() => {
+              // Audio load error, silently handle
             }}
           />
           <div
