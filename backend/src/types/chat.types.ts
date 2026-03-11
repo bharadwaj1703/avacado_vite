@@ -57,14 +57,10 @@ export interface SendMessageRequest {
 }
 
 export interface ChatModelsResponse {
-  models: Array<{
+  data: Array<{
     id: string
     name: string
-    description?: string
-    contextLength?: number
-    pricing?: {
-      prompt: number
-      completion: number
-    }
+    pricing?: Record<string, string | undefined>
+    context_length?: number | null
   }>
 }

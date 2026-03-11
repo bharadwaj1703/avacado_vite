@@ -107,19 +107,11 @@ export class ChatService {
     const models = await fetchAllowedModels(env)
 
     return {
-      models: models.map((m) => ({
+      data: models.map((m) => ({
         id: m.id,
         name: m.name,
-        contextLength: m.context_length ?? undefined,
-        pricing: {
-          prompt: parseFloat(m.pricing.prompt ?? '0'),
-          completion: parseFloat(Object.entries(m.pricing)
-            .filter(([key]) => key !== 'prompt')
-            .map(([, val]) => val ?? '0')
-            .reduce((max, val) => Math.max(max, parseFloat(val)), 0)
-            .toString()
-          ),
-        },
+        pricing: m.pricing,
+        context_length: m.context_length,
       })),
     }
   }

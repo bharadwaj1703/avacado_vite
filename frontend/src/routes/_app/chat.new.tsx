@@ -33,6 +33,7 @@ function NewChatPage() {
   useEffect(() => {
     if (!selectedModelId && models[0]?.id) {
       setSelectedModelId(models[0].id)
+      console.log('Set default selectedModelId:', models[0].id)
     }
   }, [models, selectedModelId])
 
@@ -40,19 +41,39 @@ function NewChatPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!canSend) return
+    console.log('Form submitted, canSend:', canSend)
+    if (!canSend) {
+      console.log('Cannot send. ModelError:', hasModelError, 'createChat.isPending:', createChat.isPending, 'inputTooLong:', inputTooLong, 'input:', input, 'selectedModelId:', selectedModelId)
+      return
+    }
 
     const firstMessage = input.trim()
-    if (!firstMessage) return
+    if (!firstMessage) {
+      console.log('No first message to send.')
+      return
+    }
 
     try {
+      console.log('Creating chat with modelId:', selectedModelId)
       const chat = await createChat.mutateAsync({ modelId: selectedModelId })
+      console.log('Chat created:', chat)
       setPendingFirstChatMessage(chat.id, firstMessage)
       await navigate({ to: '/chat/$chatId', params: { chatId: chat.id } })
-    } catch {
+      console.log('Navigated to chat:', chat.id)
+    } catch (error) {
+      console.error('Failed to create chat:', error)
       // surfaced in UI via createChat.error
     }
   }
+
+  useEffect(() => {
+    if (modelsQuery.data) {
+      console.log('Loaded models:', modelsQuery.data.data)
+    }
+    if (modelsQuery.isError) {
+      console.error('Failed to load models')
+    }
+  }, [modelsQuery.data, modelsQuery.isError])
 
   return (
     <SignedInGuard>
@@ -62,7 +83,10 @@ function NewChatPage() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => navigate({ to: '/chat' })}
+              onClick={() => {
+                console.log('Navigating back to chat list');
+                navigate({ to: '/chat' });
+              }}
               aria-label="Back to chats"
             >
               <ChevronLeft className="size-5" />
@@ -72,7 +96,10 @@ function NewChatPage() {
               className="w-full"
               options={modelOptions}
               value={selectedModelId}
-              onValueChange={setSelectedModelId}
+              onValueChange={(val) => {
+                setSelectedModelId(val)
+                console.log('Model changed to:', val)
+              }}
               placeholder={modelsQuery.isLoading ? 'Loading models...' : 'Select model'}
               searchPlaceholder="Search model"
               emptyText="No models found"
@@ -89,7 +116,10 @@ function NewChatPage() {
           <div className="pointer-events-auto mx-auto w-full max-w-2xl rounded-2xl border border-border/80 bg-background/95 p-2 shadow-xl backdrop-blur">
             <textarea
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={(e) => {
+                setInput(e.target.value)
+                console.log('Input changed:', e.target.value)
+              }}
               placeholder="Type your first message..."
               disabled={createChat.isPending || hasModelError}
               className="max-h-32 min-h-[44px] w-full resize-none bg-transparent px-2 py-2 text-sm outline-none"
