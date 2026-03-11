@@ -33,25 +33,30 @@ const server = createServer(async (req, res) => {
   // Special handling for /api/chat (streaming endpoint)
   let handler = url.pathname === '/api/chat' ? chatHandler : matchRoute(url.pathname)
 
-  // Get the origin from the request, default to localhost:5173 for dev
-  const origin = req.headers.origin || 'http://localhost:5173'
+  // Get the origin from the request
+  const origin = req.headers.origin || req.headers.host || 'http://localhost:5173'
   
-  // Allow all origins in dev, or specific origin in production
+  // Allow common dev origins
   const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:3000',
+    'http://localhost:3001',
     'http://127.0.0.1:5173',
     'http://127.0.0.1:5174',
-    '*'
+    'http://127.0.0.1:3001',
+    'http://0.0.0.0:3001'
   ]
   
-  const allowOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0]
+  // When credentials are included, we must specify exact origin (not *)
+  const allowOrigin = allowedOrigins.some(allowed => 
+    origin.includes(allowed.replace(/^https?:\/\//, ''))
+  ) ? origin : allowedOrigins[0]
   
   res.setHeader('Access-Control-Allow-Origin', allowOrigin)
   res.setHeader('Access-Control-Allow-Credentials', 'true')
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With')
 
   if (req.method === 'OPTIONS') {
     res.statusCode = 204
