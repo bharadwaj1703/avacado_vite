@@ -1,5 +1,23 @@
+# Dependencies
+node_modules/
+
+# Documentation
+docs/
+
+# Build outputs
+dist/
+dist-ssr/
+build/
+*.local
+
+# Database
+.data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,10 +25,12 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Editor directories and files
 .vscode/*
@@ -23,6 +43,23 @@ dist-ssr
 *.sln
 *.sw?
 
-.data
-client_secret_777697891656-g2ciaisukpbe29a7e01l2cho663fera5.apps.googleusercontent.com.json
+# OS files
+Thumbs.db
+
+# Secrets and credentials
+client_secret_*.json
+*.pem
+*.key
+
+# TTS files
 public/tts/*
+backend/public/tts/*
+
+# Test coverage
+coverage/
+.nyc_output/
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
