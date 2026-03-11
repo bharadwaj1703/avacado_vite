@@ -1,0 +1,20 @@
+{
+  "extends": "../backend/tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["../backend/src/*"]
+    }
+  },
+  "include": ["./**/*.ts", "../backend/src/**/*.ts"],
+  "exclude": ["node_modules"]
+}
