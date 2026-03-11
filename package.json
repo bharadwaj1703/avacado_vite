@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "dependencies": {
+    "ai": "^6.0.97"
+  },
   "scripts": {
     "dev": "bun run dev:all",
     "dev:all": "bun run --filter '*' dev",
