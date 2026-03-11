@@ -1,7 +1,7 @@
 services:
-  # Backend API Service
+  # Full-stack service (Backend + Frontend)
   - type: web
-    name: avacado-backend
+    name: avacado-app
     runtime: docker
     plan: starter
     region: oregon
@@ -10,8 +10,8 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: API_PORT
-        value: 3001
+      - key: VITE_CLERK_PUBLISHABLE_KEY
+        sync: false
       - key: DATABASE
         sync: false
       - key: DATABASE_TURSO_AUTH_TOKEN
@@ -60,27 +60,3 @@ services:
       name: avacado-data
       mountPath: /data
       sizeGB: 1
-
-  # Frontend Static Site
-  - type: web
-    name: avacado-frontend
-    runtime: static
-    buildCommand: cd frontend && bun install && bun run build
-    staticPublishPath: ./frontend/dist
-    envVars:
-      - key: VITE_API_ORIGIN
-        fromService:
-          type: web
-          name: avacado-backend
-          envVarKey: RENDER_EXTERNAL_URL
-      - key: VITE_CLERK_PUBLISHABLE_KEY
-        sync: false
-      - key: CLERK_FRONTEND_API_URL
-        sync: false
-    routes:
-      - type: rewrite
-        source: /api/*
-        destination: https://avacado-backend.onrender.com/api/*
-      - type: rewrite
-        source: /*
-        destination: /index.html
