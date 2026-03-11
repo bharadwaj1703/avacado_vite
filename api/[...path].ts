@@ -63,10 +63,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 }
 
-// Configure for streaming responses (for chat endpoint)
+// Configure for Vercel serverless functions
 export const config = {
-  api: {
-    bodyParser: true,
-    responseLimit: false,
-  },
+  runtime: 'nodejs22.x',
+  maxDuration: 60,
 }

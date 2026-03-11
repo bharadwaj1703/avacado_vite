@@ -5,13 +5,6 @@
   "framework": null,
   "installCommand": "bun install",
   "devCommand": "bun run dev",
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "nodejs20.x",
-      "memory": 3008,
-      "maxDuration": 60
-    }
-  },
   "rewrites": [
     {
       "source": "/api/:path*",
