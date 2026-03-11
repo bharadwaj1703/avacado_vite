@@ -7,8 +7,11 @@ node_modules
 coverage
 
 # Production
-build
 dist-ssr
+# Don't ignore backend/dist - needed for API functions
+!backend/dist
+# Don't ignore backend/src - needed for API functions
+!backend/src
 
 # Misc
 .DS_Store

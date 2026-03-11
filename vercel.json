@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "NODE_OPTIONS='--max-old-space-size=4096' bun run build",
+  "buildCommand": "bun install && NODE_OPTIONS='--max-old-space-size=4096' bun run build:backend && NODE_OPTIONS='--max-old-space-size=4096' bun run build:frontend",
   "outputDirectory": "frontend/dist",
   "framework": null,
   "installCommand": "bun install",
