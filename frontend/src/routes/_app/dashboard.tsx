@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import {
   useContentManifest,
@@ -123,30 +124,55 @@ function DashboardPage() {
   const { isMilestoneUnlocked, isLevelUnlocked } = useGating(manifest)
   const isLessonComplete = useProgressStore((s: ProgressStore) => s.isLessonComplete)
 
-  const activeMilestone = milestones.find((m) => {
-    if (!isMilestoneUnlocked(m.id)) return false
-    const levels = m.level_refs
-      .map((ref) => manifest.levels[ref])
-      .filter(Boolean)
-    return levels.some((level) =>
-      level.lesson_refs.some((lessonRef) => {
-        const lesson = manifest.lessons[lessonRef]
-        return lesson && !isLessonComplete(m.id, level.id, lesson.id)
-      })
+  if (!milestones || milestones.length === 0) {
+    return (
+      <div className="mx-auto w-full max-w-2xl px-5 py-6">
+        <div className="flex items-center justify-center py-20">
+          <p className="text-sm text-muted-foreground">Loading content...</p>
+        </div>
+      </div>
     )
-  }) ?? milestones[0]
+  }
+
+  const activeMilestone = useMemo(() => {
+    for (const milestone of milestones) {
+      if (!isMilestoneUnlocked(milestone.id)) continue
+      
+      const levels = milestone.level_refs
+        .map((ref) => manifest.levels[ref])
+        .filter(Boolean)
+      
+      for (const level of levels) {
+        for (const lessonRef of level.lesson_refs) {
+          const lesson = manifest.lessons[lessonRef]
+          if (lesson && !isLessonComplete(milestone.id, level.id, lesson.id)) {
+            return milestone
+          }
+        }
+      }
+    }
+    return milestones[0]
+  }, [milestones, manifest.levels, manifest.lessons, isMilestoneUnlocked, isLessonComplete])
+
+  const milestonesWithLevels = useMemo(
+    () =>
+      milestones.map((milestone) => ({
+        ...milestone,
+        levels: milestone.level_refs
+          .map((ref) => manifest.levels[ref])
+          .filter(Boolean)
+          .sort((a, b) => a.order - b.order),
+      })),
+    [milestones, manifest.levels]
+  )
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-10 px-5 py-6">
       <CategoryRow />
-      {milestones.map((milestone) => {
+      {milestonesWithLevels.map((milestone) => {
         const isActive = milestone.id === activeMilestone?.id
         const unlocked = isMilestoneUnlocked(milestone.id)
-
-        const levels = milestone.level_refs
-          .map((ref) => manifest.levels[ref])
-          .filter(Boolean)
-          .sort((a, b) => a.order - b.order)
+        const levels = milestone.levels
 
         return (
           <div key={milestone.id} className="space-y-8">

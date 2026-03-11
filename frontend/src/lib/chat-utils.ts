@@ -2,19 +2,38 @@ import type { UIMessage } from 'ai'
 
 const pendingFirstChatMessages = new Map<string, string>()
 
+type ParsedMessageContent = {
+  id?: string
+  role: string
+  parts?: UIMessage['parts']
+}
+
+function isValidUIMessageContent(obj: unknown): obj is ParsedMessageContent {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    'role' in obj &&
+    typeof (obj as { role: unknown }).role === 'string' &&
+    'parts' in obj
+  )
+}
+
+function isValidUIMessageRole(role: string): role is UIMessage['role'] {
+  return ['system', 'developer', 'user', 'assistant', 'tool'].includes(role)
+}
+
 export function messageRowsToUIMessages(
   messages: Array<{ id: string; role: string; content: string }>
 ): UIMessage[] {
   const out: UIMessage[] = []
   for (const row of messages) {
     try {
-      const o = JSON.parse(row.content) as unknown
-      if (o && typeof o === 'object' && 'role' in o && 'parts' in o) {
-        const obj = o as { id?: string; role: string; parts: UIMessage['parts'] }
+      const parsed = JSON.parse(row.content) as unknown
+      if (isValidUIMessageContent(parsed) && isValidUIMessageRole(parsed.role)) {
         out.push({
-          id: obj.id ?? row.id,
-          role: obj.role as UIMessage['role'],
-          parts: obj.parts ?? [],
+          id: parsed.id ?? row.id,
+          role: parsed.role,
+          parts: parsed.parts ?? [],
         })
       }
     } catch {

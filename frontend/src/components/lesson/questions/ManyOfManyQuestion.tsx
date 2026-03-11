@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import type { ManyOfManyQuestion } from '@/types/content'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
@@ -13,7 +13,7 @@ interface ManyOfManyQuestionProps {
   submitted?: boolean
 }
 
-export function ManyOfManyQuestionComponent({
+export const ManyOfManyQuestionComponent = memo(function ManyOfManyQuestionComponent({
   question,
   onSubmit,
   submitted = false,
@@ -219,4 +219,4 @@ export function ManyOfManyQuestionComponent({
       {result && <AnswerFeedback result={result} />}
     </div>
   )
-}
+})

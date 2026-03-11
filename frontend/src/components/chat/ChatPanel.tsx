@@ -28,15 +28,27 @@ function escapeHtml(text: string): string {
     .replaceAll("'", '&#39;')
 }
 
+function isValidUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
+}
+
 function parseInlineMarkdown(text: string): string {
   let value = escapeHtml(text)
   value = value.replace(/`([^`]+)`/g, '<code>$1</code>')
   value = value.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
   value = value.replace(/\*([^*\n]+)\*/g, '<em>$1</em>')
-  value = value.replace(
-    /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
-    '<a href="$2" target="_blank" rel="noreferrer noopener">$1</a>'
-  )
+  // Validate URLs before creating links to prevent XSS
+  value = value.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (match, linkText, url) => {
+    if (isValidUrl(url)) {
+      return `<a href="${escapeHtml(url)}" target="_blank" rel="noreferrer noopener">${linkText}</a>`
+    }
+    return escapeHtml(match) // Return escaped if URL is invalid
+  })
   return value
 }
 
@@ -303,6 +315,7 @@ export function ChatPanel({
                     <div
                       className="markdown-message max-w-[95%] break-words px-1 text-foreground/95"
                       dangerouslySetInnerHTML={{ __html: markdownToHtml(text) }}
+                      // Note: markdownToHtml uses escapeHtml for security. Consider adding DOMPurify for additional sanitization layer.
                     />
                   )}
                 </div>
@@ -350,6 +363,7 @@ export function ChatPanel({
                       <button
                         key={option}
                         type="button"
+                        aria-label={`Provide feedback: ${option}`}
                         className="rounded-full border px-2 py-1 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:text-xs"
                       >
                         {option}

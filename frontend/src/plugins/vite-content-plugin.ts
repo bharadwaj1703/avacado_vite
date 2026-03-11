@@ -434,18 +434,14 @@ export function contentPlugin(options: { contentDir?: string } = {}): Plugin {
         // Debounce: wait 600ms for rapid changes to settle (avoids reload storms)
         if (debounceTimer) clearTimeout(debounceTimer)
         debounceTimer = setTimeout(() => {
-          console.log(`[content] File changed: ${filePath}`)
           const result = buildManifest()
           if (result.errors.length > 0) {
-            console.error('[content] Validation errors:')
-            result.errors.forEach((e) => console.error(`  ${e.file}: ${e.error}`))
             return
           }
 
           // Only trigger HMR if manifest content actually changed
           const newHash = JSON.stringify(result.manifest)
           if (newHash === manifestHash) {
-            console.log('[content] No content changes detected, skipping HMR')
             return
           }
 
@@ -469,7 +465,6 @@ export function contentPlugin(options: { contentDir?: string } = {}): Plugin {
       }
       manifest = result.manifest
       manifestHash = JSON.stringify(manifest)
-      console.log('[content] Manifest generated successfully')
     },
 
     resolveId(id) {

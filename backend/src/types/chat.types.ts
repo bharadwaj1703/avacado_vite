@@ -57,7 +57,7 @@ export interface SendMessageRequest {
 }
 
 export interface ChatModelsResponse {
-  models: Array<{
+  data: Array<{
     id: string
     name: string
     description?: string

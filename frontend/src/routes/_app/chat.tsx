@@ -1,4 +1,4 @@
-import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { useRef, useState, useMemo, memo, type PointerEvent as ReactPointerEvent } from 'react'
 import { Outlet, createFileRoute, useLocation, useNavigate } from '@tanstack/react-router'
 import { SignedInGuard } from '@/components/auth/AuthGuards'
 import { useChats } from '@/hooks/useChats'
@@ -55,7 +55,7 @@ type ChatCardProps = {
   onDelete: () => void
 }
 
-function ChatCard({
+const ChatCard = memo(function ChatCard({
   chat,
   title,
   modelName,
@@ -171,7 +171,7 @@ function ChatCard({
       </Button>
     </div>
   )
-}
+})
 
 function ChatIndexPage() {
   const navigate = useNavigate()
@@ -185,7 +185,10 @@ function ChatIndexPage() {
   const chats = chatsQuery.data?.data ?? []
   const isIndexRoute = location.pathname === '/chat' || location.pathname === '/chat/'
 
-  const modelNameById = new Map((modelsData?.data ?? []).map((entry) => [entry.id, entry.name]))
+  const modelNameById = useMemo(
+    () => new Map((modelsData?.data ?? []).map((entry) => [entry.id, entry.name])),
+    [modelsData?.data]
+  )
 
   if (!isIndexRoute) {
     return <Outlet />

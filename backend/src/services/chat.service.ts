@@ -107,7 +107,7 @@ export class ChatService {
     const models = await fetchAllowedModels(env)
 
     return {
-      models: models.map((m) => ({
+      data: models.map((m) => ({
         id: m.id,
         name: m.name,
         contextLength: m.context_length ?? undefined,

@@ -54,8 +54,8 @@ export function AnimatedSVGHero({ src, animationConfig }: AnimatedSVGHeroProps) 
             }
           })
         })
-        .catch((err) => {
-          console.error('Failed to load SVG:', err)
+        .catch(() => {
+          // SVG load failed, silently handle
         })
 
       // Cleanup function for React 19

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import type { TextEntryQuestion } from '@/types/content'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,7 +13,7 @@ interface TextEntryQuestionProps {
   submitted?: boolean
 }
 
-export function TextEntryQuestionComponent({
+export const TextEntryQuestionComponent = memo(function TextEntryQuestionComponent({
   question,
   onSubmit,
   submitted = false,
@@ -74,4 +74,4 @@ export function TextEntryQuestionComponent({
       {result && <AnswerFeedback result={result} />}
     </div>
   )
-}
+})
