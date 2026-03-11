@@ -65,6 +65,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
 // Configure for Vercel serverless functions
 export const config = {
-  runtime: 'nodejs20.x',
+  runtime: 'nodejs22.x',
   maxDuration: 60,
 }
