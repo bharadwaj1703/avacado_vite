@@ -31,13 +31,8 @@ export async function apiRequest<TResponse>(
   } = {}
 ): Promise<TResponse> {
   const token = options.tokenProvider ? await options.tokenProvider() : null
-  const url = apiUrl(path)
-  
-  console.log('[apiRequest] Making request:', { method: options.method ?? 'GET', url, hasToken: !!token })
-  
-  const response = await fetch(url, {
+  const response = await fetch(apiUrl(path), {
     method: options.method ?? 'GET',
-    credentials: 'include', // Include cookies for Clerk session
     headers: {
       ...(options.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -51,7 +46,6 @@ export async function apiRequest<TResponse>(
       payload && typeof payload === 'object' && 'error' in payload && typeof payload.error === 'string'
         ? payload.error
         : 'Request failed'
-    console.error('[apiRequest] Request failed:', { status: response.status, statusText: response.statusText, error: errorMessage, payload })
     throw new Error(errorMessage)
   }
 
