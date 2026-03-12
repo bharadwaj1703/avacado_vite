@@ -1,44 +1,5 @@
 {
-  "version": 2,
-  "buildCommand": "bun install && NODE_OPTIONS='--max-old-space-size=4096' bun run build:backend && NODE_OPTIONS='--max-old-space-size=4096' bun run build:frontend",
-  "outputDirectory": "frontend/dist",
-  "framework": null,
-  "installCommand": "bun install",
-  "devCommand": "bun run dev",
   "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "/api/:path*"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ],
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Credentials",
-          "value": "true"
-        },
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization"
-        }
-      ]
-    }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+    { "source": "/((?!assets/|api/).*)", "destination": "/index.html" }
+  ]
 }

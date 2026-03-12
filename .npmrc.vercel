@@ -1,8 +1,0 @@
-# For Vercel deployment with AWS CodeArtifact
-# Add these as Vercel environment variables:
-# NPM_TOKEN=<your-codeartifact-token>
-# Then uncomment and use this .npmrc
-
-# registry=https://growthschool-314254797702.d.codeartifact.ap-south-1.amazonaws.com/npm/gw/
-# //growthschool-314254797702.d.codeartifact.ap-south-1.amazonaws.com/npm/gw/:_authToken=${NPM_TOKEN}
-# //growthschool-314254797702.d.codeartifact.ap-south-1.amazonaws.com/npm/gw/:always-auth=true
