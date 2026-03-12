@@ -6,21 +6,27 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { resolve } from 'node:path'
 import { readFileSync, existsSync } from 'node:fs'
 
-// Load .env.local into process.env before anything else
-const envPath = resolve(import.meta.dirname, '..', '.env.local')
-if (existsSync(envPath)) {
-  for (const line of readFileSync(envPath, 'utf8').split('\n')) {
-    const trimmed = line.trim()
-    if (!trimmed || trimmed.startsWith('#')) continue
-    const eq = trimmed.indexOf('=')
-    if (eq <= 0) continue
-    const key = trimmed.slice(0, eq).trim()
-    let value = trimmed.slice(eq + 1).trim()
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'")))
-      value = value.slice(1, -1)
-    if (!process.env[key]) process.env[key] = value
+// Load .env and .env.local into process.env before anything else
+function loadEnvFile(filename: string) {
+  const envPath = resolve(import.meta.dirname, '..', filename)
+  if (existsSync(envPath)) {
+    for (const line of readFileSync(envPath, 'utf8').split('\n')) {
+      const trimmed = line.trim()
+      if (!trimmed || trimmed.startsWith('#')) continue
+      const eq = trimmed.indexOf('=')
+      if (eq <= 0) continue
+      const key = trimmed.slice(0, eq).trim()
+      let value = trimmed.slice(eq + 1).trim()
+      if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'")))
+        value = value.slice(1, -1)
+      if (!process.env[key]) process.env[key] = value
+    }
   }
 }
+
+// Load .env first, then .env.local (which can override .env)
+loadEnvFile('.env')
+loadEnvFile('.env.local')
 
 import healthHandler from '../api/health'
 import meHandler from '../api/users/me'
