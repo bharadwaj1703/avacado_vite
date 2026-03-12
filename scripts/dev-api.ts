@@ -64,23 +64,7 @@ const server = createServer(async (req, res) => {
   const url = new URL(req.url ?? '/', `http://localhost:${PORT}`)
   const handler = matchRoute(url.pathname)
 
-  // Get the origin from the request, default to localhost:5173 for dev
-  const origin = req.headers.origin || 'http://localhost:5173'
-  
-  // Allow all origins in dev, or specific origin in production
-  const allowedOrigins = [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:3000',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:5174',
-    '*'
-  ]
-  
-  const allowOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0]
-  
-  res.setHeader('Access-Control-Allow-Origin', allowOrigin)
-  res.setHeader('Access-Control-Allow-Credentials', 'true')
+  res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
