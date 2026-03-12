@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "bun run dev:api & vite",
     "dev:api": "bun run scripts/dev-api.ts",
-    "build": "tsc -b && vite build && bun run migrate",
+    "build": "bunx tsc -b && vite build && bun run migrate",
     "migrate": "bun run scripts/migrate.ts",
     "generate": "bun run scripts/generate-tts.ts",
     "sync": "bun run scripts/sync.ts",

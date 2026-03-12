@@ -1,12 +1,16 @@
 # Production Deployment Guide
 
-## Issue: ERR_CONNECTION_REFUSED in Production
+## Issues Fixed
 
-The frontend is trying to connect to `http://localhost:3001` in production, which doesn't exist.
+1. **ERR_CONNECTION_REFUSED** - Frontend trying to connect to `http://localhost:3001` in production
+2. **Vercel Build Errors** - Invalid runtime configuration and missing TypeScript compiler
+3. **Database Migration** - Backend not loading `.env` file properly
 
-## Root Cause
+## Root Causes
 
-The `.env` file has `VITE_API_ORIGIN=http://localhost:3001` which is baked into the production build.
+1. The `.env` file has `VITE_API_ORIGIN=http://localhost:3001` which is baked into the production build
+2. `vercel.json` had incorrect function runtime specification
+3. Build command couldn't find `tsc` in PATH
 
 ## Solution
 
