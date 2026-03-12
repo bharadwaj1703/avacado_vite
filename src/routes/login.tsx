@@ -5,7 +5,7 @@ import { SignedOutOnlyGuard } from '@/components/auth/AuthGuards'
 function LoginPage() {
   return (
     <div className="mx-auto flex min-h-dvh max-w-md items-center justify-center px-4 py-8">
-      <SignIn path="/login" routing="path" signUpUrl="/signup" forceRedirectUrl="/" />
+      <SignIn routing="hash" signUpUrl="/signup" forceRedirectUrl="/" />
     </div>
   )
 }
