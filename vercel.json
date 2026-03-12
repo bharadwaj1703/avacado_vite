@@ -1,12 +1,8 @@
 {
-  "buildCommand": "bun run build",
+  "buildCommand": "npx tsc -b && npx vite build",
+  "installCommand": "npm install",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/((?!assets/|api/).*)", "destination": "/index.html" }
-  ],
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "nodejs20.x"
-    }
-  }
+  ]
 }
