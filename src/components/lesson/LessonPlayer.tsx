@@ -92,6 +92,13 @@ const WHEEL_THRESHOLD = 80
 const WHEEL_COOLDOWN_MS = 600
 
 // ============================================================================
+// Progress circle constants (module-level so they never trigger useMemo/useCallback re-runs)
+// ============================================================================
+
+const CIRCLE_RADIUS = 16
+const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS
+
+// ============================================================================
 // Component
 // ============================================================================
 
@@ -112,6 +119,9 @@ export function LessonPlayer({
   const progressCircleRef = useRef<SVGCircleElement>(null)
   const counterRef = useRef<HTMLSpanElement>(null)
   const wheelCooldownRef = useRef(false)
+  const checkpointTimeoutRef = useRef<number | null>(null)
+  // Stable ref holding the latest wheel handler — avoids re-registering the listener on every state change.
+  const wheelHandlerRef = useRef<(e: WheelEvent) => void>(() => {})
   const [state, dispatch] = useReducer(lessonReducer, {
     phase: 'screens',
     currentScreenIndex: 0,
@@ -147,9 +157,6 @@ export function LessonPlayer({
   }, [])
 
   // Animate circular progress + counter
-  const CIRCLE_RADIUS = 16
-  const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * CIRCLE_RADIUS
-
   const animateProgressBar = useCallback((targetPercent: number) => {
     if (!progressCircleRef.current) return
     const targetOffset = CIRCLE_CIRCUMFERENCE * (1 - targetPercent / 100)
@@ -158,7 +165,7 @@ export function LessonPlayer({
       duration: 400,
       ease: 'outQuad',
     })
-  }, [CIRCLE_CIRCUMFERENCE])
+  }, [])
 
   const animateCounter = useCallback((direction: 'next' | 'prev') => {
     if (!counterRef.current) return
@@ -308,13 +315,23 @@ export function LessonPlayer({
   const handleCheckpointSubmit = useCallback(
     (result: QuestionResult) => {
       if (result.correct) {
-        setTimeout(() => {
+        checkpointTimeoutRef.current = window.setTimeout(() => {
+          checkpointTimeoutRef.current = null
           advanceFromCheckpoint()
         }, 400)
       }
     },
     [advanceFromCheckpoint]
   )
+
+  // Cancel any pending checkpoint transition when the component unmounts.
+  useEffect(() => {
+    return () => {
+      if (checkpointTimeoutRef.current != null) {
+        window.clearTimeout(checkpointTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // ---- Swipe handling ----
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
@@ -350,42 +367,43 @@ export function LessonPlayer({
   }, [state.phase, state.currentScreenIndex, advanceFromScreen, handleScreenPrev, navigate])
 
   // ---- Wheel/scroll handling for desktop ----
-  useEffect(() => {
-    const el = containerRef.current?.closest('.lesson-player-root')
-    if (!el) return
+  // Always keep the ref in sync with the latest state/handlers so the listener
+  // registered once on mount always has up-to-date logic.
+  wheelHandlerRef.current = (e: WheelEvent) => {
+    if (wheelCooldownRef.current) return
+    if (Math.abs(e.deltaY) < WHEEL_THRESHOLD) return
 
-    const handleWheel = (e: Event) => {
-      const we = e as WheelEvent
-      if (wheelCooldownRef.current) return
-      if (Math.abs(we.deltaY) < WHEEL_THRESHOLD) return
+    wheelCooldownRef.current = true
+    setTimeout(() => {
+      wheelCooldownRef.current = false
+    }, WHEEL_COOLDOWN_MS)
 
-      wheelCooldownRef.current = true
-      setTimeout(() => {
-        wheelCooldownRef.current = false
-      }, WHEEL_COOLDOWN_MS)
-
-      if (we.deltaY > 0) {
-        // Scroll down → next
-        if (state.phase === 'screens') {
-          advanceFromScreen()
-        }
-      } else {
-        // Scroll up → prev or home
-        if (state.phase === 'screens' || state.phase === 'checkpoint') {
-          if (state.phase === 'screens' && state.currentScreenIndex === 0) {
-            navigate({ to: '/dashboard' })
-          } else {
-            handleScreenPrev()
-          }
+    if (e.deltaY > 0) {
+      // Scroll down → next
+      if (state.phase === 'screens') {
+        advanceFromScreen()
+      }
+    } else {
+      // Scroll up → prev or home
+      if (state.phase === 'screens' || state.phase === 'checkpoint') {
+        if (state.phase === 'screens' && state.currentScreenIndex === 0) {
+          navigate({ to: '/dashboard' })
+        } else {
+          handleScreenPrev()
         }
       }
     }
+  }
 
+  // Attach the wheel listener once on mount; the ref above always holds the latest handler.
+  useEffect(() => {
+    const el = containerRef.current?.closest('.lesson-player-root') as HTMLElement | null
+    if (!el) return
+    const handleWheel = (e: Event) => wheelHandlerRef.current(e as WheelEvent)
     el.addEventListener('wheel', handleWheel, { passive: true })
-    return () => {
-      el.removeEventListener('wheel', handleWheel)
-    }
-  }, [state.phase, state.currentScreenIndex, advanceFromScreen, handleScreenPrev, navigate])
+    return () => el.removeEventListener('wheel', handleWheel)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Calculate progress
   const totalSteps = screens.length + (hasQuiz ? 1 : 0)

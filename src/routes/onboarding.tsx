@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useMemo, useEffect, useCallback } from 'react'
 import type { MutableRefObject } from 'react'
 import { createFileRoute, useNavigate, Navigate } from '@tanstack/react-router'
 import { useAuth } from '@clerk/clerk-react'
@@ -84,7 +84,7 @@ function OnboardingPage() {
 
   const { data: profile, isLoading: profileLoading } = useAppUserProfile()
 
-  const steps = buildSteps(profession)
+  const steps = useMemo(() => buildSteps(profession), [profession])
   const [stepIndex, setStepIndex] = useState(0)
   const currentStepKey = steps[stepIndex]
   const totalSteps = steps.length
@@ -404,24 +404,26 @@ function CompletionMascot() {
 }
 
 function PersonalisingLoader({ onComplete }: { onComplete: () => void }) {
-  const mountedRef = useRef(false)
+  // Keep a stable ref to onComplete so the effect closure never captures a stale version.
+  const onCompleteRef = useRef(onComplete)
+  onCompleteRef.current = onComplete
 
-  const setRef = (el: HTMLDivElement | null) => {
-    if (el && !mountedRef.current) {
-      mountedRef.current = true
+  useEffect(() => {
+    const duration = 3000 + Math.random() * 2000
+    const id = window.setTimeout(() => onCompleteRef.current(), duration)
+    return () => window.clearTimeout(id)
+  }, [])
 
-      animate(el.querySelectorAll('.pl-text'), {
-        y: [20, 0],
-        opacity: [0, 1],
-        duration: 600,
-        delay: 200,
-        ease: 'outExpo',
-      })
-
-      const duration = 3000 + Math.random() * 2000
-      window.setTimeout(() => onComplete(), duration)
-    }
-  }
+  const setRef = useCallback((el: HTMLDivElement | null) => {
+    if (!el) return
+    animate(el.querySelectorAll('.pl-text'), {
+      y: [20, 0],
+      opacity: [0, 1],
+      duration: 600,
+      delay: 200,
+      ease: 'outExpo',
+    })
+  }, [])
 
   return (
     <div ref={setRef} className="flex min-h-dvh flex-col items-center justify-center gap-4">

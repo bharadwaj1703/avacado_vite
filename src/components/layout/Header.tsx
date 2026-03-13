@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
 import { CircleDollarSign, Flame, Trophy, CircleUser } from 'lucide-react'
 import { animate } from 'animejs'
@@ -7,17 +7,12 @@ import { StreakDrawer } from '@/components/header/StreakDrawer'
 
 function useShineEffect() {
   const ref = useRef<HTMLAnchorElement>(null)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const attachRef = useCallback((el: HTMLAnchorElement | null) => {
-    ref.current = el
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
-      intervalRef.current = null
-    }
+  useEffect(() => {
+    const el = ref.current
     if (!el) return
 
-    intervalRef.current = setInterval(() => {
+    const id = setInterval(() => {
       const shine = el.querySelector<HTMLElement>('[data-shine]')
       if (!shine) return
       animate(shine, {
@@ -27,13 +22,16 @@ function useShineEffect() {
         ease: 'inOutQuad',
       })
     }, 12000)
+
+    return () => clearInterval(id)
   }, [])
 
-  return attachRef
+  return ref
 }
 
 export function Header() {
   const shineRef = useShineEffect()
+  // shineRef is a RefObject<HTMLAnchorElement> returned by useShineEffect.
   const [coinDrawerOpen, setCoinDrawerOpen] = useState(false)
   const [streakDrawerOpen, setStreakDrawerOpen] = useState(false)
 

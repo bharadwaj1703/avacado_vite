@@ -46,7 +46,7 @@ export function ExploreCategoryPage({ categoryId }: { categoryId: string }) {
       <div ref={setRef} className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {lessons.map((lesson, i) => (
           <div
-            key={lesson.title}
+            key={`${i}-${lesson.title}`}
             className="explore-card overflow-hidden rounded-2xl border border-border opacity-0"
           >
             <div

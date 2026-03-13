@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { animate } from 'animejs'
 import { Button } from '@/components/ui/button'
 import {
@@ -277,50 +277,52 @@ export function CouponDrawer({
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const dotsAnimated = useRef(false)
 
-  function clearTimer() {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current)
+  // Timer lives in a useEffect so it is always cleaned up on unmount,
+  // not only when the user explicitly closes the drawer.
+  useEffect(() => {
+    if (!open || unlocked) return
+
+    const id = setInterval(() => {
+      setSecondsLeft((prev) => {
+        if (prev <= 1) {
+          clearInterval(id)
+          intervalRef.current = null
+          onTimerExpired()
+          onOpenChange(false)
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+
+    intervalRef.current = id
+
+    return () => {
+      clearInterval(id)
       intervalRef.current = null
     }
-  }
+  }, [open, unlocked, onTimerExpired, onOpenChange])
 
   function handleOpenChange(next: boolean) {
-    if (!next) {
-      clearTimer()
-    }
     onOpenChange(next)
   }
 
+  // Ref callback for the drawer content — handles the entrance dot animation only.
   const innerRef = (el: HTMLDivElement | null) => {
-    if (el && !intervalRef.current) {
-      intervalRef.current = setInterval(() => {
-        setSecondsLeft((prev) => {
-          if (prev <= 1) {
-            clearTimer()
-            onTimerExpired()
-            onOpenChange(false)
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
-
-      if (!dotsAnimated.current) {
-        dotsAnimated.current = true
-        const dots = el.querySelectorAll('.celebration-dot')
-        animate(dots, {
-          scale: [0, 1],
-          opacity: [0, 0.6],
-          duration: 600,
-          delay: (_el, i: number) => i * 80,
-          ease: 'outBack',
-        })
-      }
+    if (el && !dotsAnimated.current) {
+      dotsAnimated.current = true
+      const dots = el.querySelectorAll('.celebration-dot')
+      animate(dots, {
+        scale: [0, 1],
+        opacity: [0, 0.6],
+        duration: 600,
+        delay: (_el, i: number) => i * 80,
+        ease: 'outBack',
+      })
     }
   }
 
   function handleSlideUnlock() {
-    clearTimer()
     setUnlocked(true)
   }
 

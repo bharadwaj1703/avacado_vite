@@ -44,7 +44,7 @@ function quizReducer(state: QuizState, action: QuizAction): QuizState {
       return {
         ...state,
         answers: { ...state.answers, [action.questionId]: action.answer },
-        submittedQuestions: new Set([...Array.from(state.submittedQuestions), action.questionId]),
+        submittedQuestions: new Set(state.submittedQuestions).add(action.questionId),
         results: { ...state.results, [action.questionId]: action.result },
       }
     case 'NEXT_QUESTION':

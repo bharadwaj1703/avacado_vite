@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import { animate, stagger } from 'animejs'
 
 // ============================================================================
@@ -37,34 +37,36 @@ export function TranscriptTyper({
   const hasCompletedRef = useRef(false)
   const previousWordRef = useRef(-1)
 
-  // Parse transcript into words with paragraph tracking
-  const segments = transcript.split('\n\n').map((paragraph) => {
-    const words = paragraph.trim().split(/\s+/).filter(Boolean)
-    return words
-  })
+  // Memoize all transcript parsing so it only runs when inputs change, not on every render.
+  const { segments, speed, totalWords } = useMemo(() => {
+    const segs = transcript.split('\n\n').map((paragraph) =>
+      paragraph.trim().split(/\s+/).filter(Boolean)
+    )
+    const totalWordCount = segs.reduce((sum, words) => sum + words.length, 0)
+    const spd =
+      estimatedDuration && totalWordCount > 0
+        ? (estimatedDuration * 1000) / totalWordCount
+        : speedProp
 
-  // Count total words to derive speed from estimatedDuration
-  const totalWordCount = segments.reduce((sum, words) => sum + words.length, 0)
-  const speed = estimatedDuration && totalWordCount > 0
-    ? (estimatedDuration * 1000) / totalWordCount
-    : speedProp
-
-  // Calculate cumulative delays for each word
-  let wordIndex = 0
-  const wordDelays: number[] = []
-
-  segments.forEach((words, segmentIndex) => {
-    words.forEach((_, i) => {
-      let delay = wordIndex * speed
-      if (segmentIndex > 0 && i === 0) {
-        delay += segmentIndex * paragraphPause
-      }
-      wordDelays.push(delay)
-      wordIndex++
+    let wi = 0
+    const delays: number[] = []
+    segs.forEach((words, segmentIndex) => {
+      words.forEach((_, i) => {
+        let delay = wi * spd
+        if (segmentIndex > 0 && i === 0) delay += segmentIndex * paragraphPause
+        delays.push(delay)
+        wi++
+      })
     })
-  })
 
-  const totalWords = wordDelays.length
+    return { segments: segs, speed: spd, totalWords: delays.length }
+  }, [transcript, speedProp, estimatedDuration, paragraphPause])
+
+  // Reset completion tracking when the transcript changes rather than during render.
+  useEffect(() => {
+    hasCompletedRef.current = false
+    previousWordRef.current = -1
+  }, [transcript])
 
   const handleRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -124,10 +126,6 @@ export function TranscriptTyper({
     },
     [speed, onWordRevealed, onComplete, totalWords]
   )
-
-  // Reset completion flag when transcript changes
-  hasCompletedRef.current = false
-  previousWordRef.current = -1
 
   return (
     <div
