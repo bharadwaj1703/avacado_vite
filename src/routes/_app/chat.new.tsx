@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowUp, ChevronLeft } from 'lucide-react'
-import { SignedInGuard } from '@/components/auth/AuthGuards'
 import { useCreateChat } from '@/hooks/useChatMutations'
 import { useChatModels } from '@/hooks/useChatModels'
 import { setPendingFirstChatMessage } from '@/lib/chat-utils'
@@ -55,8 +54,7 @@ function NewChatPage() {
   }
 
   return (
-    <SignedInGuard>
-      <div className="fixed inset-0 z-50 flex flex-col bg-background">
+    <div className="fixed inset-0 z-50 flex flex-col bg-background">
         <div className="border-b px-3 py-2">
           <div className="mx-auto flex w-full max-w-2xl items-center gap-2">
             <Button
@@ -124,7 +122,6 @@ function NewChatPage() {
           </div>
         </form>
       </div>
-    </SignedInGuard>
   )
 }
 

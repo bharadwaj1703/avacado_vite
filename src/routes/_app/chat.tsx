@@ -1,6 +1,5 @@
-import { useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { useRef, useState, useMemo, type PointerEvent as ReactPointerEvent } from 'react'
 import { Outlet, createFileRoute, useLocation, useNavigate } from '@tanstack/react-router'
-import { SignedInGuard } from '@/components/auth/AuthGuards'
 import { useChats } from '@/hooks/useChats'
 import { useDeleteChat } from '@/hooks/useChatMutations'
 import { useChatModels } from '@/hooks/useChatModels'
@@ -185,15 +184,17 @@ function ChatIndexPage() {
   const chats = chatsQuery.data?.data ?? []
   const isIndexRoute = location.pathname === '/chat' || location.pathname === '/chat/'
 
-  const modelNameById = new Map((modelsData?.data ?? []).map((entry) => [entry.id, entry.name]))
+  const modelNameById = useMemo(
+    () => new Map((modelsData?.data ?? []).map((entry) => [entry.id, entry.name])),
+    [modelsData?.data]
+  )
 
   if (!isIndexRoute) {
     return <Outlet />
   }
 
   return (
-    <SignedInGuard>
-      <div className="relative mx-auto flex min-h-full w-full max-w-2xl flex-col px-5 py-6">
+    <div className="relative mx-auto flex min-h-full w-full max-w-2xl flex-col px-5 py-6">
         {chatsQuery.isLoading && (
           <p className="mt-4 text-sm text-muted-foreground">Loading chats…</p>
         )}
@@ -290,7 +291,6 @@ function ChatIndexPage() {
           </AlertDialogContent>
         </AlertDialog>
       </div>
-    </SignedInGuard>
   )
 }
 

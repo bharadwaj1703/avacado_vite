@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { CircleDollarSign, X } from 'lucide-react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useRewards } from '@/hooks/useContentManifest'
@@ -30,6 +30,7 @@ function RewardsPage() {
   const dragState = useRef<DragState>({ active: false, startX: 0, currentX: 0 })
   const cardRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   const animatingRef = useRef(false)
+  const closeFlippedTimeoutRef = useRef<number | null>(null)
 
   const setCardRef = useCallback((itemIndex: number, el: HTMLDivElement | null) => {
     if (el) {
@@ -105,10 +106,22 @@ function RewardsPage() {
 
   const closeFlipped = useCallback(() => {
     setFlippedIndex(null)
-    setTimeout(() => {
+    if (closeFlippedTimeoutRef.current != null) {
+      window.clearTimeout(closeFlippedTimeoutRef.current)
+    }
+    closeFlippedTimeoutRef.current = window.setTimeout(() => {
+      closeFlippedTimeoutRef.current = null
       cycleTopToBack()
     }, 750)
   }, [cycleTopToBack])
+
+  useEffect(() => {
+    return () => {
+      if (closeFlippedTimeoutRef.current != null) {
+        window.clearTimeout(closeFlippedTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const handlePointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {

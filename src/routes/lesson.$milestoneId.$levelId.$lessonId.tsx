@@ -4,9 +4,10 @@ import { contentManifest } from '@/hooks/useContentManifest'
 import { LessonPlayer } from '@/components/lesson/LessonPlayer'
 import { Button } from '@/components/ui/button'
 import { useProgressStore } from '@/store/progress'
+import { RequireOnboardingComplete } from '@/components/auth/AuthGuards'
 
 export const Route = createFileRoute('/lesson/$milestoneId/$levelId/$lessonId')({
-  component: LessonRoute,
+  component: LessonRouteWrapper,
   beforeLoad: ({ params }) => {
     // Check if lesson is unlocked
     const isUnlocked = useProgressStore.getState().isLessonUnlocked(
@@ -45,6 +46,14 @@ export const Route = createFileRoute('/lesson/$milestoneId/$levelId/$lessonId')(
     throw error
   },
 })
+
+function LessonRouteWrapper() {
+  return (
+    <RequireOnboardingComplete>
+      <LessonRoute />
+    </RequireOnboardingComplete>
+  )
+}
 
 function LessonRoute() {
   const { milestoneId, levelId, lessonId } = Route.useParams()
