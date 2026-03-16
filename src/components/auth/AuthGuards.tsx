@@ -13,22 +13,6 @@ function AuthLoadingFallback() {
   )
 }
 
-export function InitialRouteRedirect() {
-  const { isLoaded, isSignedIn } = useAuth()
-  const { data: profile, isLoading } = useAppUserProfile()
-
-  if (!isLoaded) return <AuthLoadingFallback />
-  if (!isSignedIn) return <Navigate to="/splash" />
-  if (isLoading) return <AuthLoadingFallback />
-
-  if (!profile?.onboardingCompletedAt) {
-    return <Navigate to="/onboarding" />
-  }
-
-  const postAuthPath: PostAuthPath = '/dashboard'
-  return <Navigate to={postAuthPath} />
-}
-
 export function RedirectSignedInFromSplash({ children }: { children: ReactNode }) {
   const { isLoaded, isSignedIn } = useAuth()
 
@@ -90,4 +74,21 @@ export function RequireOnboardingComplete({ children }: { children: ReactNode })
   }
 
   return <>{children}</>
+}
+
+
+export function InitialRouteRedirect() {
+  const { isLoaded, isSignedIn } = useAuth()
+  const { data: profile, isLoading } = useAppUserProfile()
+
+  if (!isLoaded) return <AuthLoadingFallback />
+  if (!isSignedIn) return <Navigate to="/splash" />
+  if (isLoading) return <AuthLoadingFallback />
+
+  if (!profile?.onboardingCompletedAt) {
+    return <Navigate to="/onboarding" />
+  }
+
+  const postAuthPath: PostAuthPath = '/dashboard'
+  return <Navigate to={postAuthPath} />
 }
