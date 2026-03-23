@@ -1,3 +1,15 @@
 node_modules
 .env
+.env.local
 .npmrc
+
+# Database
+.data/
+
+# Build artifacts
+dist/
+*.tsbuildinfo
+
+# Generated files
+public/tts/
+package-lock.json
