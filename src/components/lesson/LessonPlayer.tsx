@@ -350,8 +350,10 @@ export function LessonPlayer({
     if (Math.abs(deltaY) < SWIPE_THRESHOLD) return
 
     if (deltaY > 0) {
-      // Swipe up → next
+      // Swipe up → next (blocked for interactive screens — user must click Continue)
       if (state.phase === 'screens') {
+        const currentScreen = screens[state.currentScreenIndex]
+        if (currentScreen?.hero?.type === 'interactive') return
         advanceFromScreen()
       }
     } else {
@@ -379,8 +381,10 @@ export function LessonPlayer({
     }, WHEEL_COOLDOWN_MS)
 
     if (e.deltaY > 0) {
-      // Scroll down → next
+      // Scroll down → next (blocked for interactive screens — user must click Continue)
       if (state.phase === 'screens') {
+        const currentScreen = screens[state.currentScreenIndex]
+        if (currentScreen?.hero?.type === 'interactive') return
         advanceFromScreen()
       }
     } else {
@@ -442,6 +446,7 @@ export function LessonPlayer({
             key={screenKey ?? currentScreen.id}
             screen={currentScreen}
             onComplete={advanceFromScreen}
+            onGoBack={state.currentScreenIndex > 0 ? handleScreenPrev : undefined}
             onMascotCta={handleMascotCta}
             ttsUrl={ttsUrl}
           />
