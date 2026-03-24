@@ -361,20 +361,24 @@ export function LessonPlayer({
       if (wheelCooldownRef.current) return
       if (Math.abs(we.deltaY) < WHEEL_THRESHOLD) return
 
-    if (e.deltaY > 0) {
-      // Scroll down → next (blocked for interactive screens — user must click Continue)
-      if (state.phase === 'screens') {
-        const currentScreen = screens[state.currentScreenIndex]
-        if (currentScreen?.hero?.type === 'interactive') return
-        advanceFromScreen()
-      }
-    } else {
-      // Scroll up → prev or home
-      if (state.phase === 'screens' || state.phase === 'checkpoint') {
-        if (state.phase === 'screens' && state.currentScreenIndex === 0) {
-          navigate({ to: '/dashboard' })
-        } else {
-          handleScreenPrev()
+      wheelCooldownRef.current = true
+      setTimeout(() => { wheelCooldownRef.current = false }, WHEEL_COOLDOWN_MS)
+
+      if (we.deltaY > 0) {
+        // Scroll down → next (blocked for interactive screens — user must click Continue)
+        if (state.phase === 'screens') {
+          const currentScreen = screens[state.currentScreenIndex]
+          if (currentScreen?.hero?.type === 'interactive') return
+          advanceFromScreen()
+        }
+      } else {
+        // Scroll up → prev or home
+        if (state.phase === 'screens' || state.phase === 'checkpoint') {
+          if (state.phase === 'screens' && state.currentScreenIndex === 0) {
+            navigate({ to: '/dashboard' })
+          } else {
+            handleScreenPrev()
+          }
         }
       }
     }
